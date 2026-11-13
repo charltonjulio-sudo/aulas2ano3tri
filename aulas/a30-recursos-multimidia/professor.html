@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel do professor</title>
+<link rel="stylesheet" href="../../motor/viva.css">
+<style>
+  body.prof { height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 15px; background: #eef1f6; }
+  .p-topo { display: flex; align-items: center; gap: .5em; padding: .45em .7em; background: var(--azul); color: #fff; flex-wrap: wrap; }
+  .p-tit { flex: 1; min-width: 12em; line-height: 1.15; } .p-tit small { display: block; opacity: .9; }
+  .p-topo button, .pill { background: rgba(255,255,255,.15); color: #fff; border-radius: 8px; padding: .35em .7em; font-size: .9em; white-space: nowrap; }
+  .pill.on { background: #c8f7c5; color: #14532d; } .pill.alerta { background: #ffe0b2; color: #6b2e00; }
+  .relogio { font: 700 1.3em var(--mono); background: #0a2540; padding: .1em .5em; border-radius: 8px; }
+  .relogio.peq { font-size: 1em; } .relogio.estourou { background: var(--vermelho); }
+  .p-corpo { flex: 1; display: grid; grid-template-columns: 250px 1fr 340px; min-height: 0; }
+  #lista { overflow: auto; background: #fff; border-right: 1px solid var(--borda); padding: .4em; }
+  .bl-tit { font-weight: 700; color: var(--azul); margin: .7em .3em .2em; font-size: .85em; display: flex; justify-content: space-between; gap: .3em; }
+  .bl-cod { font: 600 .85em var(--mono); background: var(--dourado-claro); color: #5b3b00; border-radius: 6px; padding: 0 .35em; }
+  .it { display: flex; gap: .4em; align-items: center; width: 100%; text-align: left; background: none; padding: .3em .4em; border-radius: 6px; font-size: .85em; color: var(--texto); }
+  .it:hover { background: #eef3fb; } .it.atual { background: var(--azul2); color: #fff; }
+  .it .tp { font-size: .7em; background: #e3e7f1; color: var(--texto2); border-radius: 4px; padding: 0 .3em; flex: none; }
+  .it.atual .tp { background: rgba(255,255,255,.25); color: #fff; }
+  .p-centro { display: flex; flex-direction: column; min-width: 0; padding: .7em; gap: .6em; }
+  .p-prev-env { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .p-prev-caixa { position: relative; box-shadow: 0 4px 20px rgba(0,0,0,.18); border-radius: 6px; overflow: hidden; }
+  .p-prev-caixa .palco { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .p-ctrl { display: flex; gap: .6em; align-items: center; justify-content: center; }
+  .p-ctrl .btn { font-size: 1.05em; min-width: 9em; } #pos { font-weight: 700; min-width: 7em; text-align: center; }
+  #notas { overflow: auto; background: #fff; border-left: 1px solid var(--borda); padding: .7em; }
+  .nt { border-radius: 10px; padding: .5em .7em; margin-bottom: .6em; line-height: 1.4; border-left: 5px solid; }
+  .nt h4 { margin: 0 0 .2em; font-size: .85em; }
+  .nt.falar { background: #e3f2fd; border-color: var(--azul2); } .nt.fazer { background: #e8f5e9; border-color: var(--verde); }
+  .nt.perg { background: #f3e5f5; border-color: var(--roxo); } .nt.adapta { background: #fff8e1; border-color: var(--dourado); }
+  .nt.nao { background: #ffebee; border-color: var(--vermelho); } .nt.info { background: #f4f6fa; border-color: #8a93a8; }
+  .nt ol { margin: .2em 0; padding-left: 1.3em; } .nt li.agora { font-weight: 700; background: #fff3cd; }
+  .ck { border-radius: 10px; padding: .5em .7em; margin-bottom: .6em; border: 2px solid; }
+  .ck.alta { background: #e8f5e9; border-color: var(--verde); } .ck.media { background: #fff8e1; border-color: #b26a00; } .ck.baixa { background: #ffebee; border-color: var(--vermelho); }
+  .ck b.pct { font: 700 1.2em var(--mono); }
+  .nt.orig { background: #fff3e0; border-color: #e65100; }
+  table.aud { border-collapse: collapse; width: 100%; font-size: .9em; } table.aud td, table.aud th { border: 1px solid var(--borda); padding: .3em .5em; vertical-align: top; text-align: left; }
+  table.aud th { background: #eef1f6; } .grav-alta { color: #b71c1c; font-weight: 700; } .grav-media { color: #8a4b00; font-weight: 700; }
+  dialog#d-aud { max-width: min(1100px, 95vw); max-height: 90vh; }
+  dialog { border: 0; border-radius: 14px; padding: 1.2em; max-width: 92vw; }
+  dialog::backdrop { background: rgba(0,0,0,.55); }
+  .qr-grande { width: min(70vh, 80vw); } .qr-grande svg { width: 100%; height: auto; }
+  .url { font: 600 1.1em var(--mono); word-break: break-all; }
+  table.cods { border-collapse: collapse; margin-top: .6em; } table.cods td { border: 1px solid var(--borda); padding: .2em .6em; } table.cods td:last-child { font: 700 1.1em var(--mono); }
+  @media (max-width: 1000px) { .p-corpo { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; overflow: auto; } #lista { max-height: 22vh; } #notas { border-left: 0; } .p-prev-env { min-height: 40vh; } }
+</style>
+</head>
+<body class="prof">
+<header class="p-topo">
+  <div class="p-tit"><b id="tit"></b><small id="sub"></small></div>
+  <span class="pill" id="st-tv">📺 TV fechada</span>
+  <button class="pill" id="st-fb" type="button">☁️ Celulares: desligado</button>
+  <span class="relogio" id="t-aula" title="Tempo restante da aula">00:00</span>
+  <button id="b-play" type="button" title="Iniciar/pausar cronômetro">▶</button>
+  <span class="relogio peq" id="t-slide" title="Tempo neste slide">00:00</span>
+  <button id="b-tv" type="button">📺 Abrir TV</button>
+  <button id="b-qr" type="button">📱 QR dos alunos</button>
+  <button id="b-zerar" type="button">🧹 Zerar aula</button>
+  <button class="pill" id="b-aud" type="button" hidden>🔎 Auditoria</button>
+</header>
+<div class="p-corpo">
+  <nav id="lista" aria-label="Slides"></nav>
+  <section class="p-centro">
+    <div class="p-prev-env" id="prev-env"><div class="p-prev-caixa" id="prev-caixa"><div class="palco" id="prev" data-base="palco"></div></div></div>
+    <div class="p-ctrl">
+      <button class="btn sec" id="b-ant" type="button">◀ Anterior</button>
+      <span id="pos"></span>
+      <button class="btn sec" id="b-rev" type="button">👁 Revelar (R)</button>
+      <button class="btn" id="b-prox" type="button">Próximo ▶</button>
+      <span id="q-ctrl" hidden><button class="btn sec" id="q-menos" type="button" title="Letra do quadro menor">🔍−</button> <button class="btn sec" id="q-mais" type="button" title="Letra do quadro maior">🔍+</button> <button class="btn sec" id="q-edit" type="button">✏️ Editar quadro</button></span>
+    </div>
+  </section>
+  <aside id="notas" aria-label="Roteiro do professor"></aside>
+</div>
+
+<dialog id="d-qr">
+  <h2 style="margin-top:0">📱 Aula no celular</h2>
+  <div class="qr-grande" id="qr"></div>
+  <p class="url" id="qr-url"></p>
+  <div id="qr-cods"></div>
+  <p><button class="btn" type="button" onclick="this.closest('dialog').close()">Fechar</button></p>
+</dialog>
+
+<dialog id="d-aud"><div id="aud-corpo"></div><p><button class="btn" type="button" onclick="this.closest('dialog').close()">Fechar</button></p></dialog>
+
+<dialog id="d-quadro">
+  <h2 style="margin-top:0">✏️ Editar o quadro</h2>
+  <p>Uma linha por linha do quadro. Vale <b>**negrito**</b> e <code>`código`</code>. Muda na TV e nos celulares na hora.</p>
+  <textarea id="q-texto" rows="10" style="width:min(80vw,700px);font:1.05em var(--mono);padding:.5em"></textarea>
+  <p><button class="btn" type="button" id="q-salvar">Salvar</button> <button class="btn sec" type="button" id="q-orig">Voltar ao original</button> <button class="btn sec" type="button" onclick="this.closest('dialog').close()">Cancelar</button></p>
+</dialog>
+
+<dialog id="d-login">
+  <h2 style="margin-top:0">☁️ Conectar os celulares</h2>
+  <div id="login-corpo"></div>
+</dialog>
+
+<script src="../../config.js"></script>
+<script src="../../motor/qrcode.js"></script>
+<script src="../../motor/viva-core.js"></script>
+<script src="../../motor/viva-sync.js"></script>
+<script src="../../motor/viva-planilha.js"></script>
+<script src="../../motor/viva-render.js"></script>
+<script src="aula.js"></script>
+<script src="codigos.js"></script>
+<script>
+(function () {
+  "use strict";
+  const V = Viva, A = window.AULA, S = A.slides, COD = window.AULA_CODIGOS || {};
+  const CH = "viva:prof:" + A.id;
+  let st = Object.assign({ i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: 1, qe: {} }, V.store.get(CH, {}));
+  const ef = (k) => V.efetivo(S[k], st);
+  st.rodando = false;
+  const $ = V.$;
+
+  $("#tit").textContent = A.titulo;
+  $("#sub").textContent = [A.disciplina, (A.turmas || []).join(", ")].filter(Boolean).join(" · ");
+  document.title = "Professor — " + A.titulo;
+
+  /* lista de slides por bloco */
+  const lista = $("#lista");
+  (A.blocos || [{ id: undefined, titulo: "" }]).forEach((b) => {
+    const doBloco = S.map((s, i) => [s, i]).filter(([s]) => s.bloco === b.id || (!b.id && !s.bloco));
+    if (!doBloco.length) return;
+    lista.insertAdjacentHTML("beforeend", '<div class="bl-tit"><span>' + V.esc(b.titulo || "") + "</span>" + (COD[b.id] ? '<span class="bl-cod" title="Código do bloco (celular sem internet)">' + V.esc(COD[b.id]) + "</span>" : "") + "</div>");
+    doBloco.forEach(([s, i]) => lista.insertAdjacentHTML("beforeend", '<button type="button" class="it" data-i="' + i + '"><span class="tp">' + s.tipo + "</span><span>" + (i + 1) + ". " + V.esc(s.titulo || s.pergunta || s.id) + "</span></button>"));
+  });
+  lista.addEventListener("click", (e) => { const b = e.target.closest("[data-i]"); if (b) ir(+b.dataset.i, 0); });
+
+  /* prévia escalada */
+  const prev = $("#prev"), caixa = $("#prev-caixa"), env = $("#prev-env");
+  function escalar() {
+    const k = Math.min(env.clientWidth / 1600, env.clientHeight / 900);
+    caixa.style.width = 1600 * k + "px"; caixa.style.height = 900 * k + "px"; prev.style.transform = "scale(" + k + ")";
+  }
+  new ResizeObserver(escalar).observe(env);
+
+  /* sincronia */
+  let fbStatus = "";
+  function publicar() {
+    st.max = Math.max(st.max, st.i);
+    V.store.set(CH, st);
+    V.Sync.publicar({ aula: A.id, i: st.i, passo: st.passo, revelado: st.revelado, max: st.max, zq: st.zq, qe: st.qe, ts: Date.now() }, (s, msg) => { fbStatus = s === "ok" ? "" : msg; pintaFB(); });
+  }
+
+  function desenhar() {
+    const s = ef(st.i);
+    V.render(s, prev, "tv", { passo: st.passo, revelado: st.revelado, zq: st.zq });
+    V.$("#q-ctrl").hidden = s.tipo !== "quadro";
+    V.$$(".it", lista).forEach((b) => b.classList.toggle("atual", +b.dataset.i === st.i));
+    const at = V.$('.it[data-i="' + st.i + '"]', lista); at && at.scrollIntoView({ block: "nearest" });
+    const n = V.passos(s);
+    $("#pos").textContent = (st.i + 1) + " / " + S.length + (n ? "  ·  passo " + st.passo + "/" + n : "");
+    $("#b-rev").hidden = !V.temRevelar(s);
+    $("#b-rev").textContent = st.revelado ? "🙈 Esconder (R)" : "👁 Revelar (R)";
+    notas(s, n);
+  }
+
+  function nt(cls, tit, html) { return html ? '<div class="nt ' + cls + '"><h4>' + tit + "</h4>" + html + "</div>" : ""; }
+  function notas(s, n) {
+    const p = s.prof || {}, md = V.md;
+    let h = "";
+    if (s.checagem) {
+      const c = s.checagem, cls = c.conf >= 90 ? "alta" : c.conf >= 70 ? "media" : "baixa";
+      h += '<div class="ck ' + cls + '">🔎 Confiança deste conteúdo: <b class="pct">' + c.conf + '%</b>' + (c.base ? "<br><small>" + md(c.base) + "</small>" : "") +
+        (c.fontes && c.fontes.length ? "<br><small>" + c.fontes.map((f) => '<a href="' + V.esc(f.url) + '" target="_blank" rel="noopener">' + V.esc(f.titulo) + "</a>").join(" · ") + "</small>" : "") + "</div>";
+    } else h += '<div class="ck baixa">🔎 Sem checagem registrada para este slide.</div>';
+    const aud = (A.auditoria && A.auditoria.itens || []).filter((x) => (s.orig || []).includes(String(x.slide)));
+    if (aud.length) h += nt("orig", "🚩 No slide original (" + (s.orig || []).join(", ") + ")", "<ul>" + aud.map((x) => "<li><b>" + V.esc(x.tipo) + ":</b> " + md(x.texto) + (x.correcao ? "<br><i>Aqui:</i> " + md(x.correcao) : "") + "</li>").join("") + "</ul>");
+    const bl = (A.blocos || []).find((b) => b.id === s.bloco);
+    const primeiro = S.findIndex((x) => x.bloco === s.bloco) === st.i;
+    if (primeiro && COD[s.bloco]) h += nt("info", "📱 Código do bloco “" + V.esc(bl ? bl.titulo : "") + "”", "<p>Escreva no quadro (só precisa para quem está sem internet): <b style=\"font:700 1.3em var(--mono)\">" + V.esc(COD[s.bloco]) + "</b></p>");
+    if (p.tempo_min) h += nt("info", "⏱️ Tempo sugerido", "<p>" + p.tempo_min + " min</p>");
+    h += nt("falar", "🗣️ Falar", p.falar && "<p>" + md(p.falar) + "</p>");
+    h += nt("fazer", "🖐️ Fazer", p.fazer && "<p>" + md(p.fazer) + "</p>");
+    h += nt("perg", "❓ Perguntar", p.perguntar && "<p>" + md(p.perguntar) + "</p>" + (p.resposta ? "<details><summary>Resposta esperada</summary><p>" + md(p.resposta) + "</p></details>" : ""));
+    if (s.tipo === "demo") {
+      const L = s.modo === "codigo" ? s.linhas.map((x) => (typeof x === "string" ? { t: x } : x)).map((x) => "<code>" + V.esc(x.t) + "</code>" + (x.explica ? " — " + md(x.explica) : "")).concat(s.saida !== undefined ? ["▶ saída: <code>" + V.esc(s.saida) + "</code>"] : [])
+        : s.modo === "carta" ? s.campos.map((c) => "<b>" + V.esc(c.rotulo) + ":</b> " + md(c.texto)) : s.passos.map((x) => "<b>" + x.cel + "</b> <code>" + V.esc(x.entrada) + "</code>" + (x.explica ? " — " + md(x.explica) : ""));
+      h += nt("info", "👀 Passos da demonstração (Próximo = 1 passo)", "<ol>" + L.map((x, k) => '<li class="' + (k === st.passo - 1 ? "agora" : "") + '">' + x + "</li>").join("") + "</ol>");
+    }
+    if (s.tipo === "quiz") h += nt("info", "✅ Gabarito", "<p><b>" + "ABCDEF"[s.correta] + ")</b> " + md(s.opcoes[s.correta]) + "</p>" + (s.explicacao ? "<p>" + md(s.explicacao) + "</p>" : ""));
+    if (s.tipo === "pratica" && s.solucao) h += nt("info", "✅ Solução", s.modo === "python" ? '<pre class="codigo">' + V.realce(s.solucao) + "</pre>" : "<p>" + md(s.solucao) + "</p>");
+    if (s.tipo === "caso" && s.resposta) h += nt("info", "✅ Resposta do caso", "<p>" + md(s.resposta) + "</p>");
+    if (s.apoio) h += nt("adapta", "🧩 No modo apoio o aluno vê", "<p>" + (s.apoio.emoji || "") + " " + md(s.apoio.texto) + "</p>");
+    h += nt("adapta", "♿ Adaptar", p.adapta && "<p>" + md(p.adapta) + "</p>");
+    h += nt("nao", "⚠️ Não adaptar", p.nao_adapta && "<p>" + md(p.nao_adapta) + "</p>");
+    if (s.glossario) h += nt("info", "📖 Glossário do aluno", "<ul>" + s.glossario.map((x) => "<li><b>" + V.esc(x.termo) + "</b>: " + md(x.explica) + "</li>").join("") + "</ul>");
+    if (p.refs && p.refs.length) h += nt("info", "🔗 Referências", "<ul>" + p.refs.map((r) => '<li><a href="' + V.esc(r.url) + '" target="_blank" rel="noopener">' + V.esc(r.titulo) + "</a></li>").join("") + "</ul>");
+    $("#notas").innerHTML = h || '<p style="color:var(--texto2)">Sem notas para este slide.</p>';
+  }
+
+  function ir(i, passo) { st.i = Math.max(0, Math.min(S.length - 1, i)); st.passo = passo; st.revelado = false; st.tSlide = 0; publicar(); desenhar(); }
+  function proximo() { const n = V.passos(ef(st.i)); if (st.passo < n) { st.passo++; publicar(); desenhar(); } else if (st.i < S.length - 1) ir(st.i + 1, 0); }
+  function anterior() { if (st.passo > 0) { st.passo--; publicar(); desenhar(); } else if (st.i > 0) ir(st.i - 1, V.passos(ef(st.i - 1))); }
+  function revelar() { if (!V.temRevelar(S[st.i])) return; st.revelado = !st.revelado; publicar(); desenhar(); }
+  $("#b-prox").onclick = proximo; $("#b-ant").onclick = anterior; $("#b-rev").onclick = revelar;
+  document.addEventListener("keydown", (e) => {
+    if (e.target.closest("input,textarea,dialog")) return;
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); proximo(); }
+    if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); anterior(); }
+    if (e.key === "r" || e.key === "R") revelar();
+  });
+
+  /* cronômetros */
+  const mmss = (t) => { const a = Math.abs(t); return (t < 0 ? "-" : "") + String(Math.floor(a / 60)).padStart(2, "0") + ":" + String(a % 60).padStart(2, "0"); };
+  function pintaTempo() {
+    $("#t-aula").textContent = mmss(st.restante); $("#t-aula").classList.toggle("estourou", st.restante < 0);
+    $("#t-slide").textContent = mmss(st.tSlide);
+    const tm = (S[st.i].prof || {}).tempo_min; $("#t-slide").classList.toggle("estourou", !!tm && st.tSlide > tm * 60);
+    $("#b-play").textContent = st.rodando ? "⏸" : "▶";
+  }
+  setInterval(() => { if (st.rodando) { st.restante--; st.tSlide++; if (st.restante % 10 === 0) V.store.set(CH, st); } pintaTempo(); }, 1000);
+  $("#b-play").onclick = () => { st.rodando = !st.rodando; pintaTempo(); };
+
+  /* zerar (dois cliques) */
+  let zConf = 0;
+  $("#b-zerar").onclick = () => {
+    if (Date.now() - zConf > 3000) { zConf = Date.now(); $("#b-zerar").textContent = "Confirmar zerar?"; setTimeout(() => ($("#b-zerar").textContent = "🧹 Zerar aula"), 3000); return; }
+    st = { i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: st.zq, qe: st.qe };
+    $("#b-zerar").textContent = "🧹 Zerar aula"; publicar(); desenhar(); pintaTempo(); V.toast("Aula zerada.");
+  };
+
+  /* TV */
+  $("#b-tv").onclick = () => window.open("tv.html", "viva-tv-" + A.id);
+  setInterval(() => { const on = V.Sync.tvAberta(); $("#st-tv").textContent = on ? "📺 TV conectada" : "📺 TV fechada"; $("#st-tv").classList.toggle("on", on); }, 1500);
+
+  /* QR */
+  $("#b-qr").onclick = () => {
+    const url = V.urlIrma("aluno.html");
+    $("#qr").innerHTML = V.qrSVG(url, 8); $("#qr-url").textContent = url;
+    const linhas = (A.blocos || []).filter((b) => COD[b.id]).map((b) => "<tr><td>" + V.esc(b.titulo) + "</td><td>" + V.esc(COD[b.id]) + "</td></tr>").join("");
+    $("#qr-cods").innerHTML = linhas ? "<p><b>Códigos dos blocos</b> (só para quem estiver sem internet; os outros seguem você ao vivo):</p><table class=\"cods\">" + linhas + (COD.__tudo ? "<tr><td>Libera tudo (revisão)</td><td>" + V.esc(COD.__tudo) + "</td></tr>" : "") + "</table>" : "";
+    $("#d-qr").showModal();
+  };
+
+  /* Firebase: login do professor */
+  function pintaFB() {
+    const b = $("#st-fb"), a = V.Sync.auth();
+    b.classList.remove("on", "alerta");
+    if (!V.Sync.temRemoto()) { b.textContent = "☁️ Celulares: sem Firebase"; return; }
+    if (!a) { b.textContent = "☁️ Celulares: entrar"; b.classList.add("alerta"); return; }
+    if (fbStatus) { b.textContent = "☁️ Erro ao enviar"; b.title = fbStatus; b.classList.add("alerta"); return; }
+    b.textContent = "☁️ Celulares ao vivo"; b.title = a.email; b.classList.add("on");
+  }
+  $("#st-fb").onclick = () => {
+    const c = $("#login-corpo"), a = V.Sync.auth();
+    if (!V.Sync.temRemoto()) c.innerHTML = "<p>O Firebase ainda não foi configurado no <code>config.js</code> do site. Sem ele, os alunos usam os <b>códigos dos blocos</b> (botão 📱 QR).</p><p>Passo a passo: <code>docs/FIREBASE.md</code> no kit.</p><p><button class=\"btn\" type=\"button\" onclick=\"this.closest('dialog').close()\">Fechar</button></p>";
+    else if (a) c.innerHTML = "<p>Conectado como <b>" + V.esc(a.email) + "</b>.</p><p><button class=\"btn sec\" type=\"button\" id=\"b-sair\">Sair</button> <button class=\"btn\" type=\"button\" onclick=\"this.closest('dialog').close()\">Fechar</button></p>";
+    else c.innerHTML = '<form id="f-login" method="dialog"><label class="rot">E-mail do professor (Firebase)</label><input id="l-email" type="email" required style="width:100%;padding:.4em" autocomplete="username"><label class="rot">Senha</label><input id="l-senha" type="password" required style="width:100%;padding:.4em" autocomplete="current-password"><p id="l-msg" style="color:var(--vermelho)"></p><p><button class="btn" type="submit">Entrar</button> <button class="btn sec" type="button" onclick="this.closest(\'dialog\').close()">Cancelar</button></p></form>';
+    $("#d-login").showModal();
+    const sair = $("#b-sair"); if (sair) sair.onclick = () => { V.Sync.logout(); $("#d-login").close(); pintaFB(); };
+    const f = $("#f-login");
+    if (f) f.onsubmit = async (e) => {
+      e.preventDefault(); $("#l-msg").textContent = "Entrando…";
+      try { await V.Sync.login($("#l-email").value.trim(), $("#l-senha").value); $("#d-login").close(); fbStatus = ""; publicar(); pintaFB(); V.toast("Celulares conectados.", "ok"); }
+      catch (err) { $("#l-msg").textContent = "Não entrou: " + err.message; }
+    };
+  };
+
+  /* quadro: tamanho e edição ao vivo */
+  $("#q-mais").onclick = () => { st.zq = Math.min(2.2, +(st.zq + 0.15).toFixed(2)); publicar(); desenhar(); };
+  $("#q-menos").onclick = () => { st.zq = Math.max(0.6, +(st.zq - 0.15).toFixed(2)); publicar(); desenhar(); };
+  $("#q-edit").onclick = () => { $("#q-texto").value = ef(st.i).linhas.join("\n"); $("#d-quadro").showModal(); };
+  $("#q-salvar").onclick = () => {
+    const L = $("#q-texto").value.split("\n").map((x) => x.trimEnd()).filter((x) => x.trim());
+    if (!L.length) return V.toast("O quadro precisa de pelo menos uma linha.");
+    st.qe = Object.assign({}, st.qe, { [S[st.i].id]: L }); st.passo = L.length; $("#d-quadro").close(); publicar(); desenhar(); V.toast("Quadro atualizado na TV e nos celulares.", "ok");
+  };
+  $("#q-orig").onclick = () => { const q = Object.assign({}, st.qe); delete q[S[st.i].id]; st.qe = q; st.passo = Math.min(st.passo, S[st.i].linhas.length); $("#d-quadro").close(); publicar(); desenhar(); };
+
+  /* auditoria do material original + confiança da aula */
+  const confs = S.filter((x) => x.checagem).map((x) => x.checagem.conf);
+  if (A.auditoria || confs.length) {
+    const b = $("#b-aud"); b.hidden = false;
+    const media = confs.length ? Math.round(confs.reduce((a, c) => a + c, 0) / confs.length) : null, min = confs.length ? Math.min(...confs) : null;
+    b.textContent = "🔎 Auditoria" + (A.auditoria ? " · original " + A.auditoria.confianca_original + "%" : "") + (media !== null ? " · esta aula " + media + "%" : "");
+    b.classList.toggle("alerta", min !== null && min < 90);
+    b.onclick = () => {
+      const a = A.auditoria || {}, md = V.md;
+      let h = '<h2 style="margin-top:0">🔎 Auditoria</h2>';
+      if (a.original) h += "<p><b>Material original:</b> " + V.esc(a.original) + "<br><b>Confiabilidade do original:</b> " + a.confianca_original + "% — " + md(a.base || "") + "</p>";
+      if (a.itens) h += '<h3>Erros e incoerências no original</h3><table class="aud"><tr><th>slide</th><th>tipo</th><th>gravidade</th><th>o que tem</th><th>o que esta aula fez</th></tr>' +
+        a.itens.map((x) => "<tr><td>" + V.esc(x.slide) + "</td><td>" + V.esc(x.tipo) + '</td><td class="grav-' + V.esc(x.gravidade) + '">' + V.esc(x.gravidade) + "</td><td>" + md(x.texto) + "</td><td>" + md(x.correcao || "") + "</td></tr>").join("") + "</table>";
+      if (a.referencias) h += '<h3>Checagem das referências do original</h3><table class="aud"><tr><th>referência</th><th>veredito</th><th>confiança</th><th>nota</th></tr>' +
+        a.referencias.map((r) => "<tr><td>" + md(r.ref) + "</td><td>" + V.esc(r.veredito) + "</td><td>" + r.conf + "%</td><td>" + md(r.nota || "") + (r.url ? ' <a href="' + V.esc(r.url) + '" target="_blank" rel="noopener">fonte</a>' : "") + "</td></tr>").join("") + "</table>";
+      if (confs.length) h += "<h3>Confiança do conteúdo desta aula</h3><p>Média " + media + "% · menor " + min + "%" + (min < 90 ? " — veja os slides marcados em amarelo/vermelho." : "") + "</p><ul>" +
+        S.map((x, k) => (x.checagem && x.checagem.conf < 90 ? "<li>Slide " + (k + 1) + " (" + V.esc(x.titulo || x.id) + "): " + x.checagem.conf + "% — " + md(x.checagem.base || "") + "</li>" : "")).join("") + "</ul>";
+      $("#aud-corpo").innerHTML = h; $("#d-aud").showModal();
+    };
+  }
+
+  pintaFB(); desenhar(); pintaTempo(); publicar();
+})();
+</script>
+</body>
+</html>

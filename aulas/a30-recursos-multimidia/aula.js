@@ -1,0 +1,213 @@
+/* Aula 30 — Informática Empresarial, 2ª série ADM. Recursos multimídia: vídeo, transição e link.
+   Conteúdo autoral; passos do Google Slides conferidos na ajuda oficial e em tutoriais recentes (nov/2026). */
+window.AULA = {
+  id: "2adm-a30-recursos-multimidia",
+  titulo: "Aula 30 — Vídeo, transição e link",
+  disciplina: "Informática Empresarial",
+  turmas: ["2º ADM A", "2º ADM B", "2º ADM C"],
+  duracao_min: 50,
+  objetivo: "Escolher e inserir vídeo, transição e link no Google Slides só quando ajudam a explicar.",
+  blocos: [
+    { id: "b1", titulo: "Abertura" },
+    { id: "b2", titulo: "O que é cada recurso" },
+    { id: "b3", titulo: "Como fazer no Google Slides" },
+    { id: "b4", titulo: "Sua vez" },
+    { id: "b5", titulo: "Fechamento" },
+  ],
+  auditoria: {
+    original: "AULA_30_INFORMÁTICA_EMPRESARIAL_ADMINISTRAÇÃO_2_SERIE.pptx (SEED/RCO+aulas)",
+    confianca_original: 55,
+    base: "As definições (transição, animação, link) estão certas e as páginas de ajuda citadas existem. Mas a aula não ensina a fazer nada: não há nenhum passo a passo. Há frase vazia, erros de revisão e uma atividade com tempo irreal.",
+    itens: [
+      { slide: "2", tipo: "Slide de outra aula", gravidade: "media", texto: "Capa da **Aula 20** (LinkedIn + Google Agenda + Drive) dentro da Aula 30.", correcao: "Removido." },
+      { slide: "6", tipo: "Frase vazia", gravidade: "baixa", texto: "\"Muito além dos slides…\" entre aspas, sem autor e sem nada depois que desenvolva a ideia.", correcao: "Não usada." },
+      { slide: "8", tipo: "Link inútil", gravidade: "baixa", texto: "Link `share.google` que só abre a mesma imagem que já está no slide (constatado pelo professor). Também nos slides 10, 16 e no 9 da Aula 31.", correcao: "Não usado." },
+      { slide: "9", tipo: "Erro de revisão", gravidade: "baixa", texto: "Aspas fechadas sem abertura no fim das três perguntas.", correcao: "Reescrito (slide 5)." },
+      { slide: "17", tipo: "Atividade mal montada", gravidade: "alta", texto: "Mistura \"Criem\" e \"Adicione\"; termina com uma frase que sobrou de outro slide (\"discutam as possibilidades de respostas!\"); pede 3 slides com vídeo, link e transição em 15 min e todas as apresentações em 5 min — sem ter ensinado a inserir nada.", correcao: "Passo a passo nos slides 6–8; plano no celular/caderno em sala; slides prontos no Classroom." },
+      { slide: "7–14", tipo: "Conteúdo raso", gravidade: "alta", texto: "Explica o que é cada recurso, mas não mostra **onde clicar**. O aluno não sai sabendo inserir vídeo, transição ou link.", correcao: "3 tutoriais conferidos na ajuda do Google e em tutoriais recentes." },
+      { slide: "11", tipo: "Caso", gravidade: "baixa", texto: "Caso de Beatriz está correto como ideia.", correcao: "Trocado por caso equivalente (Davi) para não copiar o material." },
+    ],
+    referencias: [
+      { ref: "GOOGLE. Inserir ou excluir imagens e vídeos. Ajuda dos Editores de arquivos Google.", veredito: "confirmada", conf: 95, nota: "Ensina Inserir › Vídeo (YouTube, URL ou Drive).", url: "https://support.google.com/docs/answer/97447?hl=pt-BR" },
+      { ref: "GOOGLE. Como usar o Google Slides. Ajuda dos Editores de arquivos Google.", veredito: "confirmada", conf: 95, nota: "Página existe; é um guia geral.", url: "https://support.google.com/docs/answer/2763168?hl=pt-BR" },
+    ],
+  },
+
+  slides: [
+    { id: "s01", bloco: "b1", tipo: "hero", emoji: "🎬", titulo: "Vídeo, transição e link", subtitulo: "Quando ajudam e quando atrapalham",
+      prof: { falar: "Hoje vocês aprendem onde clicar e, mais importante, quando vale a pena usar.", tempo_min: 1 },
+      checagem: { conf: 100, base: "Abertura." }, orig: ["1"] },
+
+    { id: "s02", bloco: "b1", tipo: "caso", tag: "Situação", titulo: "A apresentação do Davi",
+      texto: "Davi ia mostrar uma bicicleta dobrável para a loja. Colocou **3 vídeos de 5 minutos**, um efeito diferente em cada slide e 6 links. Na hora, o arquivo travou, um vídeo não abriu e a turma se perdeu.",
+      pergunta: "O que você tiraria? O que você manteria?",
+      resposta: "Manter 1 vídeo curto que mostra a bicicleta dobrando, a mesma transição discreta em todos e só os links úteis, com nome claro. Testar antes e ter um plano B (uma foto).",
+      apoio: { emoji: "😬", texto: "Muita coisa atrapalhou o Davi." },
+      prof: { fazer: "Dupla conversa 2 min antes de revelar (R).", tempo_min: 5 },
+      checagem: { conf: 95, base: "Situação inventada, equivalente ao caso do original (slides 11–13)." }, orig: ["11", "12", "13"] },
+
+    { id: "s03", bloco: "b2", tipo: "cards", modo: "virar", titulo: "O que é cada um",
+      cartas: [
+        { frente: "🎞️ Recurso multimídia", verso: "Vídeo, imagem, áudio, gráfico ou animação que **ajuda a explicar**." },
+        { frente: "➡️ Transição", verso: "Efeito na **passagem de um slide para outro**." },
+        { frente: "✨ Animação", verso: "Efeito num **elemento dentro do slide** (um texto, uma imagem)." },
+        { frente: "🔗 Link", verso: "Texto ou imagem **clicável** que leva a um site, arquivo ou outro slide." },
+      ],
+      glossario: [{ termo: "Multimídia", emoji: "🎞️", explica: "Mais de um tipo de mídia junto: texto, som, imagem, vídeo." }],
+      apoio: { emoji: "🃏", texto: "Transição: entre slides. Animação: dentro do slide." },
+      prof: { perguntar: "Qual a diferença entre transição e animação?", resposta: "Transição acontece entre slides; animação, num elemento do slide.", tempo_min: 4 },
+      checagem: { conf: 95, base: "A ajuda do Google trata transição de slide e animação de objetos como coisas separadas.", fontes: [{ titulo: "Ajuda Google: Adicionar ou mudar animações e transições", url: "https://support.google.com/docs/answer/1689475?hl=pt-BR" }] }, orig: ["7", "14"] },
+
+    { id: "s04", bloco: "b2", tipo: "cards", modo: "classificar", titulo: "Ajuda ou atrapalha?",
+      grupos: ["Ajuda ✅", "Atrapalha ❌"],
+      itens: [
+        { texto: "Vídeo de 30 segundos mostrando o produto funcionando", grupo: 0 },
+        { texto: "Vídeo de 10 minutos para encher o tempo", grupo: 1, dica: "Vídeo longo tira o foco da sua fala." },
+        { texto: "A mesma transição suave em todos os slides", grupo: 0 },
+        { texto: "Um efeito diferente em cada slide", grupo: 1, dica: "Efeito demais chama mais atenção que o conteúdo." },
+        { texto: "Link com nome: \"Ver catálogo\"", grupo: 0 },
+        { texto: "Endereço comprido colado no meio do slide", grupo: 1, dica: "Ninguém lê um endereço comprido. Dê um nome ao link." },
+        { texto: "Vídeo que ninguém testou antes", grupo: 1, dica: "Sem teste, o vídeo pode não abrir na hora." },
+      ],
+      prof: { fazer: "Turma decide junto; R mostra na TV.", tempo_min: 4 },
+      checagem: { conf: 92, base: "Boas práticas do próprio original (slides 9, 10, 14) e de tutoriais que recomendam efeitos discretos e consistentes.", fontes: [{ titulo: "Cursa: animações e transições com moderação", url: "https://cursa.app/pt/pagina/google-slides-animacoes-e-transicoes-com-objetivo-e-moderacao" }] }, orig: ["9", "10", "14"] },
+
+    { id: "s05", bloco: "b2", tipo: "conteudo", titulo: "Antes de colocar um vídeo, 3 perguntas", revelar_itens: true,
+      itens: ["Ele **ajuda a explicar**?", "**Cabe no tempo** da apresentação?", "Vai **abrir na hora** (internet, som, permissão)?"],
+      destaque: "Plano B: uma foto do produto, com a fonte.",
+      apoio: { emoji: "❓", texto: "Ajuda? Cabe? Abre?" },
+      prof: { falar: "Se uma resposta for \"não\", troque por imagem.", tempo_min: 2 },
+      checagem: { conf: 95, base: "As 3 perguntas são do slide 9 do original, reescritas." }, orig: ["9", "10"] },
+
+    { id: "s06", bloco: "b3", tipo: "tutorial", ferramenta: "Google Slides no computador", titulo: "Inserir um vídeo",
+      passos: [
+        { texto: "Abra a apresentação e clique no slide que vai receber o vídeo." },
+        { texto: "Abra o menu:", menu: ["Inserir", "Vídeo"] },
+        { texto: "Escolha de onde vem o vídeo: **pesquisa do YouTube**, **URL** (endereço) ou **Google Drive**." },
+        { texto: "Selecione o vídeo e clique em **Inserir**." },
+        { texto: "Teste no modo de apresentação (botão no canto superior direito).", dica: "Sem internet o vídeo do YouTube não toca. Tenha a foto de plano B." },
+      ],
+      fontes: [
+        { titulo: "Ajuda Google: Inserir ou excluir imagens e vídeos", url: "https://support.google.com/docs/answer/97447?hl=pt-BR" },
+        { titulo: "TecMundo (abr/2024)", url: "https://www.tecmundo.com.br/software/281538-inserir-videos-slides-google-slides.htm" },
+        { titulo: "Clipchamp (nov/2024)", url: "https://clipchamp.com/pt-br/blog/como-inserir-um-video-do-youtube-no-google-slides/" },
+      ],
+      apoio: { emoji: "🎬", texto: "Inserir › Vídeo. Escolha. Inserir." },
+      prof: { fazer: "Se houver projetor ou laboratório, faça ao vivo enquanto os passos aparecem.", tempo_min: 4 },
+      checagem: { conf: 95, base: "Caminho Inserir › Vídeo e as três origens (YouTube, URL, Drive) iguais na ajuda oficial e nos dois tutoriais.", fontes: [{ titulo: "Ajuda Google", url: "https://support.google.com/docs/answer/97447?hl=pt-BR" }] }, orig: ["8", "10"] },
+
+    { id: "s07", bloco: "b3", tipo: "tutorial", ferramenta: "Google Slides no computador", titulo: "Colocar transição (e animação)",
+      passos: [
+        { texto: "Na coluna da esquerda, clique no slide que vai receber a transição." },
+        { texto: "Abra o menu:", menu: ["Slide", "Transição"], dica: "Tutoriais antigos chamam de **Alterar transição**. Na ajuda atual do Google o nome é **Transição**." },
+        { texto: "No painel da direita, em **Transição de slide**, escolha um efeito discreto." },
+        { texto: "Quer o mesmo efeito em todos? Use **Aplicar a todos** no painel, se aparecer." },
+        { texto: "Para animar um texto ou imagem dentro do slide:", menu: ["Inserir", "Animação"] },
+      ],
+      fontes: [
+        { titulo: "Ajuda Google: Adicionar ou mudar animações e transições", url: "https://support.google.com/docs/answer/1689475?hl=pt-BR" },
+        { titulo: "Cursa: transições com moderação", url: "https://cursa.app/pt/pagina/google-slides-animacoes-e-transicoes-com-objetivo-e-moderacao" },
+        { titulo: "Slidesgo School", url: "https://slidesgo.com/pt/slidesgo-school/tutoriais-do-google-slides/como-adicionar-animacoes-e-transicoes-nas-apresentacoes-do-google-slides" },
+        { titulo: "Filmora (atualizado jun/2026)", url: "https://filmora.wondershare.com.br/video-editing/google-slides-morph-transition.html" },
+      ],
+      apoio: { emoji: "➡️", texto: "Slide › Transição. Escolha um efeito." },
+      prof: { nao_adapta: "O nome do menu é o da ajuda oficial (Slide › Transição). Se a tela da escola mostrar outro nome, mostre aos alunos e avise.", tempo_min: 4 },
+      checagem: { conf: 90, base: "Slide › Transição, Inserir › Animação e o título \"Transição de slide\" vêm da ajuda oficial. Dois tutoriais antigos dizem \"Alterar transição\" (nome anterior) — avisado no passo 2. O botão \"Aplicar a todos\" aparece em dois tutoriais, mas não na página oficial lida; por isso o \"se aparecer\".", fontes: [{ titulo: "Ajuda Google", url: "https://support.google.com/docs/answer/1689475?hl=pt-BR" }] }, orig: ["14"] },
+
+    { id: "s08", bloco: "b3", tipo: "tutorial", ferramenta: "Google Slides no computador", titulo: "Criar um link",
+      passos: [
+        { texto: "Selecione o texto, a imagem ou a forma que vai virar link." },
+        { texto: "Abra:", menu: ["Inserir", "Link"], atalho: ["Ctrl", "K"] },
+        { texto: "Para um site: cole o endereço e clique em **Aplicar**." },
+        { texto: "Para outro slide: escolha **Slides nesta apresentação** e o slide de destino." },
+        { texto: "Dê um nome claro ao link, como **Ver catálogo**, e teste no modo de apresentação." },
+      ],
+      fontes: [
+        { titulo: "Slidesgo School: links no Google Slides", url: "https://slidesgo.com/pt/slidesgo-school/tutoriais-do-google-slides/como-adicionar-links-nas-apresentacoes-do-google-slides" },
+        { titulo: "Canaltech: link para outro slide", url: "https://canaltech.com.br/software/como-adicionar-link-para-outro-slide-no-google-apresentacoes/" },
+        { titulo: "Cursa: links e navegação interna", url: "https://cursa.app/pt/pagina/google-slides-links-botoes-e-navegacao-interna-na-apresentacao" },
+      ],
+      apoio: { emoji: "🔗", texto: "Selecione. Inserir › Link. Aplicar." },
+      prof: { fazer: "Mostre a diferença entre link com nome e endereço solto.", tempo_min: 3 },
+      checagem: { conf: 88, base: "Três tutoriais concordam (Inserir › Link, Ctrl+K, \"Slides nesta apresentação\", Aplicar). Não encontrei a página oficial específica de links para conferir os nomes; se a tela mostrar diferente, confie na tela.", fontes: [{ titulo: "Canaltech", url: "https://canaltech.com.br/software/como-adicionar-link-para-outro-slide-no-google-apresentacoes/" }] }, orig: ["14"] },
+
+    { id: "s09", bloco: "b3", tipo: "quiz", titulo: "Confere aí", pergunta: "Qual é a melhor prática com vídeo numa apresentação de empresa?",
+      opcoes: ["Usar o vídeo mais longo para preencher o tempo", "Colocar vários vídeos sem testar", "Escolher um vídeo curto e útil, testar antes e ter um plano B", "Usar um efeito diferente em cada slide"],
+      correta: 2, apoio_opcoes: 2,
+      explicacao: "Vídeo curto e útil, testado, com plano B. Vídeo longo e efeito demais tiram o foco.",
+      checagem: { conf: 95, base: "Mesma ideia do quiz do original (slides 15–16), reescrito." }, orig: ["15", "16"] },
+
+    { id: "s10", bloco: "b4", tipo: "demo", modo: "carta", formato: "carta", titulo: "Eu faço: plano de 3 slides",
+      campos: [
+        { rotulo: "Slide 1", texto: "Apresento a loja Pedal Bom. Sem efeito.", explica: "Começo simples." },
+        { rotulo: "Slide 2", texto: "Vídeo de 30 s da bicicleta dobrando. Para quê: mostrar que cabe no ônibus.", explica: "Todo recurso tem um \"para quê\"." },
+        { rotulo: "Slide 3", texto: "Link \"Ver preços\" para o site da loja.", explica: "Link com nome." },
+        { rotulo: "Transição", texto: "A mesma, suave, em todos os slides.", explica: "Discreta e igual." },
+        { rotulo: "Teste", texto: "O vídeo abre? Tem som? O link abre o site certo?", explica: "Testar antes de apresentar." },
+        { rotulo: "Plano B", texto: "Foto da bicicleta dobrada, com a fonte.", explica: "Se a internet cair." },
+      ],
+      prof: { falar: "Primeiro planeja, depois clica. Assim não sobra efeito à toa.", tempo_min: 4 },
+      checagem: { conf: 92, base: "Exemplo novo no formato da resposta modelo do original (slide 18)." }, orig: ["18"] },
+
+    { id: "s11", bloco: "b4", tipo: "pratica", modo: "texto", titulo: "Você faz: seu plano",
+      enunciado: "Invente uma empresa (produto, serviço, evento ou campanha). Escreva o plano dos 3 slides: o que vai em cada um, qual recurso, **para quê**, como testar e o plano B.",
+      dica: "Use o plano da Pedal Bom como modelo.",
+      solucao: "Igual ao modelo: cada recurso com um \"para quê\", 1 vídeo curto no máximo, 1 transição igual, link com nome, teste e plano B.",
+      apoio: { emoji: "📝", texto: "Escreva o que vai em cada slide." },
+      prof: { fazer: "Grupos de 3 ou 4. No laboratório, já montem no Google Slides com os passos 6, 7 e 8.", adapta: "Sem internet: só o plano no papel (o próprio original sugere isso).", tempo_min: 10 },
+      checagem: { conf: 92, base: "Atividade do original (slide 17) refeita com tempo possível e passos ensinados antes." }, orig: ["17"] },
+
+    { id: "s12", bloco: "b4", tipo: "pratica", modo: "desenho", titulo: "Versão desenho: seus 3 slides",
+      enunciado: "Desenhe os 3 slides. Marque com 🎬 onde vai o vídeo e com 🔗 onde vai o link.",
+      apoio: { emoji: "🎨", texto: "Desenhe 3 slides." },
+      checagem: { conf: 95, base: "Atividade de apoio." } },
+
+    { id: "s13", bloco: "b4", tipo: "atividade", titulo: "Checklist antes de apresentar (5 min)", tempo_min: 5, entrega: "Plano no caderno hoje; slides prontos no Classroom",
+      itens: ["O vídeo abre e tem som?", "O link abre o lugar certo?", "A transição é a mesma em todos os slides?", "Tenho um plano B se a internet cair?"],
+      apoio: { emoji: "✅", texto: "Marque o que já testou." },
+      checagem: { conf: 95, base: "Itens de verificação do original (slides 10, 14, 18)." }, orig: ["10", "18"] },
+
+    { id: "s14", bloco: "b5", tipo: "quadro", titulo: "Para o caderno",
+      linhas: ["Recurso multimídia: ajuda a explicar, não é enfeite", "Transição: entre slides | Animação: dentro do slide", "Vídeo: Inserir › Vídeo — curto, útil, testado, com plano B", "Transição: Slide › Transição — discreta e igual", "Link: Inserir › Link (Ctrl+K) — com nome claro"],
+      apoio: { emoji: "📓", texto: "Copie os 3 caminhos." },
+      checagem: { conf: 92, base: "Resumo da aula; caminhos conferidos nos slides 6–8 (link com 88%)." }, orig: ["20"] },
+  ],
+
+  jogo: {
+    titulo: "Missão Apresentação", emoji: "🎬",
+    fases: [
+      { id: "f1", nome: "Cada coisa no seu lugar", emoji: "🃏",
+        exemplo: { modo: "carta", formato: "carta", campos: [
+          { rotulo: "Transição", texto: "Efeito quando passa de um slide para outro.", explica: "Entre slides." },
+          { rotulo: "Animação", texto: "Efeito num texto ou imagem dentro do slide.", explica: "Dentro do slide." },
+          { rotulo: "Link", texto: "Texto clicável que leva a um site ou outro slide.", explica: "Clicou, foi." }] },
+        desafios: [
+          { id: "30-f1-1", tipo: "escolha", pergunta: "Efeito ao passar de um slide para outro é…", opcoes: ["Transição", "Animação", "Link"], correta: 0, apoio_opcoes: 2, explica: "Transição acontece entre slides." },
+          { id: "30-f1-2", tipo: "escolha", pergunta: "Um texto que leva a um site quando você clica é…", opcoes: ["Link", "Transição", "Animação"], correta: 0, apoio_opcoes: 2, explica: "Link é clicável." },
+          { id: "30-f1-3", tipo: "classificar", pergunta: "Separe.", grupos: ["Transição", "Animação", "Link"],
+            itens: [{ texto: "O slide 2 entra deslizando", grupo: 0 }, { texto: "O título aparece devagar", grupo: 1 }, { texto: "\"Ver catálogo\" abre o site", grupo: 2 }] },
+        ] },
+      { id: "f2", nome: "Ajuda ou atrapalha?", emoji: "⚖️",
+        exemplo: { modo: "carta", formato: "carta", campos: [
+          { rotulo: "Antes", texto: "3 vídeos de 5 minutos e 6 links.", explica: "Pesado e confuso." },
+          { rotulo: "Depois", texto: "1 vídeo de 30 s e 1 link \"Ver preços\".", explica: "Curto e útil." },
+          { rotulo: "Plano B", texto: "Uma foto do produto, com a fonte.", explica: "Se a internet cair." }] },
+        desafios: [
+          { id: "30-f2-1", tipo: "classificar", pergunta: "Ajuda ou atrapalha?", grupos: ["Ajuda", "Atrapalha"],
+            itens: [{ texto: "Vídeo curto mostrando o produto", grupo: 0 }, { texto: "Efeito diferente em cada slide", grupo: 1 }, { texto: "Link com nome claro", grupo: 0 }, { texto: "Vídeo sem testar", grupo: 1 }] },
+          { id: "30-f2-2", tipo: "escolha", pergunta: "Qual vídeo combina com a apresentação de um tênis?", opcoes: ["30 segundos mostrando o tênis em uso", "Clipe musical de 4 minutos", "Vídeo sem relação com o tênis"], correta: 0, apoio_opcoes: 2, explica: "Curto e mostrando o produto." },
+          { id: "30-f2-3", tipo: "escolha", pergunta: "A internet caiu e o vídeo não abre. O que fazer?", opcoes: ["Mostrar a foto de plano B e seguir", "Cancelar a apresentação", "Esperar a internet voltar sem falar nada"], correta: 0, explica: "O plano B existe para isso." },
+        ] },
+      { id: "f3", nome: "Onde clicar", emoji: "🖱️",
+        exemplo: { modo: "carta", formato: "carta", campos: [
+          { rotulo: "Vídeo", texto: "Inserir › Vídeo", explica: "YouTube, URL ou Drive." },
+          { rotulo: "Transição", texto: "Slide › Transição", explica: "Escolha um efeito discreto." },
+          { rotulo: "Link", texto: "Inserir › Link (Ctrl + K)", explica: "Cole o endereço e Aplicar." }] },
+        desafios: [
+          { id: "30-f3-1", tipo: "lacuna", frase: "Para colocar um vídeo: Inserir › ___", opcoes: ["Vídeo", "Link", "Animação"], correta: 0, explica: "Inserir › Vídeo." },
+          { id: "30-f3-2", tipo: "lacuna", frase: "Para colocar transição: ___ › Transição", opcoes: ["Slide", "Inserir", "Arquivo"], correta: 0, explica: "Slide › Transição." },
+          { id: "30-f3-3", tipo: "ordenar", pergunta: "Coloque em ordem os passos para inserir um vídeo.", itens: ["Clicar no slide", "Inserir › Vídeo", "Escolher YouTube, URL ou Drive", "Clicar em Inserir", "Testar no modo de apresentação"], explica: "Do clique no slide até o teste." },
+        ] },
+    ],
+  },
+};

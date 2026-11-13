@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D47A1">
+<title>Aula no celular</title>
+<link rel="stylesheet" href="../../motor/viva.css">
+</head>
+<body class="aluno">
+<header class="topo">
+  <span class="tit" id="tit"></span>
+  <span class="status" id="status">⏳</span>
+  <button type="button" id="adesivos" aria-label="Estrelas ganhas">⭐ 0</button>
+  <button type="button" data-a11y="menos" aria-label="Diminuir letra">A−</button>
+  <button type="button" data-a11y="mais" aria-label="Aumentar letra">A+</button>
+  <button type="button" data-a11y="ler" aria-label="Ler em voz alta">🔊</button>
+  <button type="button" data-a11y="apoio" aria-label="Modo apoio: explicação mais curta" aria-pressed="false">🧩</button>
+  <button type="button" data-a11y="contraste" aria-label="Alto contraste" aria-pressed="false">🌓</button>
+</header>
+<div id="barra"></div>
+<main class="aula" id="main"><div id="slide" class="slide"></div><div id="extra"></div></main>
+<nav class="navbar" aria-label="Navegação">
+  <button class="btn sec" type="button" id="b-ant">◀ Voltar</button>
+  <span class="pos" id="pos"></span>
+  <button class="btn" type="button" id="b-prox">Avançar ▶</button>
+</nav>
+<script src="../../config.js"></script>
+<script src="../../motor/viva-core.js"></script>
+<script src="../../motor/viva-sync.js"></script>
+<script src="../../motor/viva-planilha.js"></script>
+<script src="../../motor/viva-python.js"></script>
+<script src="../../motor/viva-render.js"></script>
+<script src="aula.js"></script>
+<script src="codigos-hash.js"></script>
+<script>
+(function () {
+  "use strict";
+  const V = Viva, A = window.AULA, S = A.slides, HASH = window.AULA_HASHES || {};
+  const CH = "viva:aluno-nav:" + A.id;
+  const $ = V.$, el = $("#slide");
+  let nav = Object.assign({ i: 0, liberados: [] }, V.store.get(CH, {}));
+  let prof = null, modo = "solo", seguindo = true, trava = null, tocando = 0;
+  const blocos = (A.blocos || []).map((b) => b.id);
+
+  $("#tit").textContent = A.titulo; document.title = A.titulo;
+  $("#adesivos").textContent = "⭐ " + (V.alunoEstado().adesivos || 0);
+  $("#adesivos").onclick = () => V.toast("Você tem " + (V.alunoEstado().adesivos || 0) + " estrelas nesta aula. Ganhe acertando e fazendo as atividades. ⭐");
+  V.a11y.init({ alvoLeitura: () => $("#main"), aoMudar: () => desenhar() });
+
+  const salvar = () => V.store.set(CH, nav);
+  const liberado = (b) => !b || !HASH[b] || nav.liberados.includes(b) || nav.liberados.includes("__tudo") || b === blocos[0];
+  function limite() {
+    if (modo === "vivo" && prof) return prof.max;
+    let k = 0; while (k < S.length - 1 && liberado(S[k + 1].bloco)) k++;
+    return k;
+  }
+
+  function status(s) {
+    const p = $("#status");
+    if (s === "ao-vivo" && prof && prof.aula === A.id) { modo = "vivo"; p.textContent = "🟢 Ao vivo"; p.className = "status ao-vivo"; }
+    else if (s === "conectando") { p.textContent = "⏳ Conectando"; p.className = "status"; }
+    else { modo = "solo"; p.textContent = "🟡 Sozinho"; p.className = "status offline"; }
+    barra(); botoes();
+  }
+
+  function barra() {
+    const b = $("#barra");
+    if (modo === "vivo" && !seguindo && prof) b.innerHTML = '<div class="aviso-barra">👀 Você está revendo.<button class="btn" type="button" id="b-seguir">Voltar para onde o professor está ▶</button></div>';
+    else if (prof && prof.aula !== A.id) b.innerHTML = '<div class="aviso-barra">ℹ️ O professor está em outra aula agora. Você pode rever esta sozinho.</div>';
+    else b.innerHTML = "";
+    const bs = $("#b-seguir"); if (bs) bs.onclick = () => { seguindo = true; nav.i = prof.i; salvar(); desenhar(); barra(); };
+  }
+
+  function botoes() {
+    $("#b-ant").disabled = nav.i === 0 && !trava;
+    $("#pos").textContent = trava ? "🔒" : nav.i + 1 + " / " + S.length;
+  }
+
+  function desenhar() {
+    tocando++;
+    const ex = $("#extra"); ex.innerHTML = "";
+    if (trava) return desenharTrava();
+    const s = V.efetivo(S[nav.i], modo === "vivo" ? prof : null);
+    const aoVivoAqui = modo === "vivo" && seguindo && prof && prof.i === nav.i;
+    const passo = aoVivoAqui ? prof.passo : V.passos(s);
+    if (!aoVivoAqui) el._prev = null;
+    V.render(s, el, "aluno", { passo, revelado: false });
+    if (s.tipo === "demo" || (s.tipo === "quadro" && V.passos(s))) {
+      ex.innerHTML = '<div class="demo-repetir"><button class="btn" type="button" id="b-tocar">▶ Ver a animação</button></div>';
+      $("#b-tocar").onclick = () => tocar(s);
+    }
+    if (nav.i === S.length - 1) fimDeAula(ex);
+    botoes();
+    window.scrollTo({ top: 0 });
+  }
+
+  // reproduz a demonstração passo a passo no próprio celular
+  function tocar(s) {
+    const meu = ++tocando, n = V.passos(s);
+    let k = 0;
+    el._prev = null;
+    const um = () => {
+      if (meu !== tocando) return;
+      V.render(s, el, "aluno", { passo: k, revelado: false });
+      if (k < n) { k++; setTimeout(um, k === 1 ? 300 : 2600); }
+    };
+    um();
+  }
+
+  function desenharTrava() {
+    const b = (A.blocos || []).find((x) => x.id === trava) || {};
+    el.className = "slide ctx-aluno";
+    el.innerHTML = '<div class="trava"><div style="font-size:2.5em">🔒</div><h2 class="s-titulo">' + V.esc(b.titulo || "Próximo bloco") + '</h2><p>Digite o código que o professor escreveu no quadro.</p><input id="cod" autocomplete="off" autocapitalize="off" aria-label="Código do quadro"><p><button class="btn" type="button" id="b-lib">Liberar</button></p><p id="cod-msg" aria-live="polite"></p></div>';
+    const tentar = async () => {
+      const h = await V.sha256(V.normCodigo($("#cod").value));
+      if (h === HASH[trava] || h === HASH.__tudo) {
+        nav.liberados.push(h === HASH.__tudo ? "__tudo" : trava); salvar();
+        V.toast("Liberado! 🔓", "ok"); trava = null; nav.i = Math.min(nav.i + 1, S.length - 1); salvar(); desenhar();
+      } else { $("#cod-msg").textContent = "Código diferente. Confira as letras e os números no quadro."; }
+    };
+    $("#b-lib").onclick = tentar;
+    $("#cod").addEventListener("keydown", (e) => { if (e.key === "Enter") tentar(); });
+    botoes();
+  }
+
+  function fimDeAula(ex) {
+    const f = window.VIVA_CONFIG && window.VIVA_CONFIG.feedback;
+    if (!f || !f.url || A.feedback === false) { ex.insertAdjacentHTML("beforeend", '<div class="feedback-box"><b>🏁 Fim da aula.</b> Você ganhou ' + (V.alunoEstado().adesivos || 0) + " ⭐ hoje.</div>"); return; }
+    const caras = ["😞", "🙁", "😐", "🙂", "😄"];
+    ex.insertAdjacentHTML("beforeend", '<div class="feedback-box"><h3 style="margin:.1em 0">🏁 Como foi a aula?</h3><p style="margin:.2em 0">Sua resposta ajuda o professor a melhorar. Não precisa pôr nome.</p><div class="emojis">' +
+      caras.map((c, k) => '<button type="button" data-nota="' + (k + 1) + '" aria-label="nota ' + (k + 1) + ' de 5">' + c + "</button>").join("") +
+      '</div><label class="rot" for="fb-ap">O que você aprendeu hoje?</label><textarea id="fb-ap" class="resp-texto" rows="2"></textarea><label class="rot" for="fb-di">O que ficou difícil?</label><textarea id="fb-di" class="resp-texto" rows="2"></textarea><p><button class="btn" type="button" id="fb-env">Enviar ✉️</button></p><p class="dica-uso">Abre o Google Forms já preenchido. Lá, toque em <b>Enviar</b>.</p></div>');
+    let nota = "";
+    V.$$("[data-nota]", ex).forEach((b) => (b.onclick = () => { nota = b.dataset.nota; V.$$("[data-nota]", ex).forEach((x) => x.classList.toggle("sel", x === b)); }));
+    $("#fb-env").onclick = () => {
+      if (!nota) { V.toast("Escolha uma carinha primeiro. 🙂"); return; }
+      const rep = { AULA: A.id + " — " + A.titulo, NOTA: nota, APRENDI: $("#fb-ap").value, DIFICIL: $("#fb-di").value };
+      const url = f.url.replace(/=(AULA|NOTA|APRENDI|DIFICIL)(?=&|$)/g, (m, k) => "=" + encodeURIComponent(rep[k]));
+      window.open(url, "_blank", "noopener");
+    };
+  }
+
+  $("#b-prox").onclick = () => {
+    if (trava) return;
+    if (nav.i >= S.length - 1) { V.toast("Você chegou ao fim. 🏁"); return; }
+    if (nav.i + 1 > limite()) {
+      if (modo === "vivo") { V.toast("Espere o professor chegar lá. 🙂"); return; }
+      trava = S[nav.i + 1].bloco; desenhar(); return;
+    }
+    nav.i++; salvar();
+    if (modo === "vivo" && prof && nav.i === prof.i) seguindo = true;
+    desenhar(); barra();
+  };
+  $("#b-ant").onclick = () => {
+    if (trava) { trava = null; desenhar(); return; }
+    if (nav.i === 0) return;
+    nav.i--; salvar();
+    if (modo === "vivo") seguindo = false;
+    desenhar(); barra();
+  };
+
+  // ao vivo
+  V.Sync.ouvirRemoto((e) => {
+    prof = e;
+    if (e.aula !== A.id) { status("offline"); return; }
+    modo = "vivo";
+    // o que o professor já mostrou fica liberado mesmo se a internet cair depois
+    S.slice(0, e.max + 1).forEach((s) => { if (s.bloco && !nav.liberados.includes(s.bloco)) nav.liberados.push(s.bloco); });
+    if (seguindo) { const mudou = nav.i !== e.i; nav.i = e.i; trava = null; salvar(); if (mudou || ["demo", "quadro", "tutorial"].includes(S[e.i].tipo) || S[e.i].revelar_itens) desenhar(); }
+    status("ao-vivo");
+  }, status);
+  if (!V.Sync.temRemoto()) status("offline");
+
+  desenhar(); barra();
+})();
+</script>
+</body>
+</html>

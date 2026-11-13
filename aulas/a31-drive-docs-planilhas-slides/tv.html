@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aula — TV</title>
+<link rel="stylesheet" href="../../motor/viva.css">
+</head>
+<body class="tv">
+<div class="palco-envoltorio" id="env">
+  <div class="tv-espera" id="espera"><h1>📺 Aguardando o painel do professor…</h1><p>Abra o painel neste mesmo navegador e clique em “Abrir TV”.<br>Tecla <b>F</b> = tela cheia.</p></div>
+  <div class="palco" id="palco" data-base="palco" hidden></div>
+</div>
+<script src="../../config.js"></script>
+<script src="../../motor/viva-core.js"></script>
+<script src="../../motor/viva-sync.js"></script>
+<script src="../../motor/viva-planilha.js"></script>
+<script src="../../motor/viva-render.js"></script>
+<script src="aula.js"></script>
+<script>
+(function () {
+  "use strict";
+  const V = Viva, A = window.AULA, palco = V.$("#palco");
+  document.title = "TV — " + A.titulo;
+  const escalar = () => { const k = Math.min(innerWidth / 1600, innerHeight / 900); palco.style.transform = "scale(" + k + ")"; };
+  addEventListener("resize", escalar); escalar();
+  let ultimo = "";
+  function aplicar(e) {
+    if (!e || e.aula !== A.id || !A.slides[e.i]) return;
+    const s = V.efetivo(A.slides[e.i], e);
+    const chave = e.i + ":" + e.passo + ":" + e.revelado + ":" + e.zq + ":" + (s.tipo === "quadro" ? s.linhas.join("|") : "");
+    if (chave === ultimo) return; ultimo = chave;
+    V.$("#espera").hidden = true; palco.hidden = false;
+    V.render(s, palco, "tv", { passo: e.passo, revelado: e.revelado, zq: e.zq });
+    palco.insertAdjacentHTML("beforeend", '<div class="palco-rodape" data-nao-ler>' + (e.i + 1) + " / " + A.slides.length + "</div>");
+  }
+  // ?remoto=1 → TV em outro aparelho (Smart TV, outro PC) segue pelo Firebase
+  if (new URLSearchParams(location.search).get("remoto") === "1") V.Sync.ouvirRemoto(aplicar);
+  else { V.Sync.ouvirLocal(aplicar); V.Sync.batimentoTV(); }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "f" || e.key === "F") { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); else document.exitFullscreen(); }
+  });
+})();
+</script>
+</body>
+</html>

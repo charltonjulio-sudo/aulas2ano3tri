@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D47A1">
+<title>Jogo da aula</title>
+<link rel="stylesheet" href="../../motor/viva.css">
+</head>
+<body class="aluno">
+<header class="topo">
+  <span class="tit" id="tit"></span>
+  <span class="status" id="estrelas">⭐</span>
+  <button type="button" data-a11y="menos" aria-label="Diminuir letra">A−</button>
+  <button type="button" data-a11y="mais" aria-label="Aumentar letra">A+</button>
+  <button type="button" data-a11y="ler" aria-label="Ler em voz alta">🔊</button>
+  <button type="button" data-a11y="apoio" aria-label="Modo apoio: menos opções e leitura da pergunta" aria-pressed="false">🧩</button>
+  <button type="button" data-a11y="contraste" aria-label="Alto contraste" aria-pressed="false">🌓</button>
+  <button type="button" id="j-prof" aria-label="Professor">🔑</button>
+</header>
+<main class="aula" id="jogo" style="padding-bottom:2em"></main>
+<script src="../../config.js"></script>
+<script src="../../motor/viva-core.js"></script>
+<script src="../../motor/viva-planilha.js"></script>
+<script src="../../motor/viva-python.js"></script>
+<script src="../../motor/viva-render.js"></script>
+<script src="../../motor/viva-jogo.js"></script>
+<script src="aula.js"></script>
+<script>
+  Viva.$("#tit").textContent = (AULA.jogo.emoji || "🎮") + " " + AULA.jogo.titulo;
+  document.title = AULA.jogo.titulo;
+  Viva.a11y.init({ alvoLeitura: () => Viva.$("#jogo") });
+  Viva.Jogo(Viva.$("#jogo"), AULA.jogo);
+</script>
+</body>
+</html>

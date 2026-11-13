@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D47A1">
+<title>Aula de hoje</title>
+<link rel="stylesheet" href="motor/viva.css">
+<style>
+  .card-aula { background: #fff; border-radius: var(--raio); padding: 1em; margin-bottom: 1em; box-shadow: 0 2px 10px rgba(20,30,60,.08); }
+  .card-aula h2 { margin: .1em 0 .2em; color: var(--azul); }
+  .card-aula .meta { color: var(--texto2); font-size: .85em; margin: 0 0 .7em; }
+  .grande { display: block; text-align: center; text-decoration: none; font-size: 1.15em; padding: .8em; margin: .5em 0; border-radius: 12px; }
+  .qr { max-width: 220px; margin: .4em auto 0; } .qr svg { width: 100%; height: auto; }
+  .rodape { text-align: center; font-size: .8em; margin-top: 2em; }
+  .rodape a { color: var(--texto2); }
+</style>
+</head>
+<body class="aluno">
+<header class="topo"><span class="tit">📚 Aula de hoje</span>
+  <button type="button" data-a11y="menos" aria-label="Diminuir letra">A−</button>
+  <button type="button" data-a11y="mais" aria-label="Aumentar letra">A+</button>
+  <button type="button" data-a11y="contraste" aria-label="Alto contraste" aria-pressed="false">🌓</button>
+</header>
+<main class="aula" id="lista"></main>
+<script src="motor/viva-core.js"></script>
+<script src="motor/qrcode.js"></script>
+<script src="aulas.js"></script>
+<script>
+  (function () {
+    const V = Viva, L = window.AULAS_ATUAIS || [], m = V.$("#lista");
+    V.a11y.init({});
+    if (!L.length) { m.innerHTML = '<div class="card-aula"><h2>Nenhuma aula publicada agora.</h2><p>Aguarde o professor. 🙂</p></div>'; return; }
+    const prof = new URLSearchParams(location.search).has("professor");
+    m.innerHTML = (L.length > 1 ? "<p><b>Escolha a sua turma:</b></p>" : "") + L.map((a, k) => {
+      const base = a.pasta.replace(/\/?$/, "/");
+      return '<section class="card-aula"><h2>' + V.esc(a.rotulo) + '</h2><p class="meta">' + V.esc(a.titulo || "") + (a.data ? " · " + V.esc(a.data.split("-").reverse().join("/")) : "") + "</p>" +
+        '<a class="btn grande" href="' + base + 'aluno.html">📱 Acompanhar a aula</a>' +
+        (a.jogo ? '<a class="btn sec grande" href="' + base + 'jogo.html">🎮 Jogo da aula</a>' : "") +
+        (a.extra || []).map((x) => '<a class="btn sec grande" href="' + V.esc(x.url) + '" target="_blank" rel="noopener">' + V.esc(x.rotulo) + "</a>").join("") +
+        (prof ? '<p><a href="' + base + 'professor.html">👨‍🏫 Painel do professor</a> · <a href="' + base + 'tv.html">📺 TV</a></p><div class="qr" data-qr="' + k + '"></div>' : "") + "</section>";
+    }).join("");
+    if (prof) V.$$("[data-qr]").forEach((d) => (d.innerHTML = V.qrSVG(new URL(L[+d.dataset.qr].pasta.replace(/\/?$/, "/") + "aluno.html", location.href).href, 6)));
+    m.insertAdjacentHTML("beforeend", '<p class="rodape"><a href="?professor">professor</a></p>');
+  })();
+</script>
+</body>
+</html>
