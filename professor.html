@@ -47,7 +47,9 @@ Viva.portaoProfessor(function () {
       '<li class="' + (C.feedback && C.feedback.url ? "ok" : "falta") + '">' + (C.feedback && C.feedback.url ? "✔ Formulário de feedback ligado." : "✖ Sem formulário de feedback.") + "</li>" +
       '<li class="ok">✔ Página dos alunos: ' + esc(abs("index.html")) + " (não tem link para esta área).</li>" +
       "</ul><p>Para mudar a <b>aula de hoje</b>, edite <code>aulas.js</code>: coloque <code>hoje: true</code> só na aula do dia.</p>" + campo("Link da página dos alunos (todas as aulas)", abs("index.html")) + "</section>";
-    h += LISTA.slice().reverse().map((a) => {
+    h = '<section class="hub-card"><h1>Como usar</h1><ol><li>Escolha a aula abaixo e clique em <b>🎛️ Painel</b> (abra no notebook).</li><li>No painel, clique em <b>📺 Abrir TV</b> e arraste a janela para a TV (ou use o botão TV daqui).</li><li>No painel, <b>☁️ Celulares</b> liga os celulares ao vivo e <b>📱 Alunos</b> mostra o QR na TV e os links para o Classroom.</li></ol></section>' + h;
+    const ordem = LISTA.filter((a) => a.hoje).concat(LISTA.filter((a) => !a.hoje).reverse());
+    h += ordem.map((a) => {
       const d = DADOS[a.pasta]; if (!d) return '<section class="hub-card"><h2>' + esc(a.pasta) + " — aula.js não encontrado</h2></section>";
       return '<section class="hub-card' + (a.hoje ? " destaque" : "") + '"><h1>' + esc(d.titulo) + (a.hoje ? ' <span class="hub-tag">hoje</span>' : "") + '</h1><p class="hub-sub">' + esc(d.objetivo || "") + "</p>" +
         '<div class="p-acoes"><a class="hub-btn ouro pequeno" href="' + esc(a.pasta) + 'professor.html"><span class="ic">🎛️</span><span>Painel</span></a><a class="hub-btn roxo pequeno" href="' + esc(a.pasta) + 'tv.html" target="viva-tv"><span class="ic">📺</span><span>TV</span></a></div>' +

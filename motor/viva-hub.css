@@ -7,10 +7,12 @@
   --h-menu: #1b1142; --h-tinta: #1a1033;
 }
 html.hub-claro { --h-fundo1: #e9e4ff; --h-fundo2: #c7d2fe; --h-por: #fdba74; --h-painel: rgba(255, 255, 255, .95); --h-borda: #6d28d9; --h-borda2: #0369a1; --h-texto: #1a1033; --h-texto2: #3b2a73; --h-menu: #ffffff; }
-body.hub { margin: 0; min-height: 100vh; color: var(--h-texto); font-size: calc(17px * var(--escala)); background: linear-gradient(180deg, var(--h-fundo1) 0%, var(--h-fundo2) 55%, var(--h-por) 100%); background-attachment: fixed; }
+body.hub { margin: 0; min-height: 100vh; color: var(--h-texto); font-size: calc(17px * var(--escala)); background: linear-gradient(rgba(12, 7, 38, .35), rgba(12, 7, 38, .6)), url("../img/fundo.webp") center / cover fixed, linear-gradient(180deg, var(--h-fundo1) 0%, var(--h-fundo2) 55%, var(--h-por) 100%); background-color: var(--h-fundo1); }
+html.hub-claro body.hub { background: linear-gradient(180deg, var(--h-fundo1) 0%, var(--h-fundo2) 55%, var(--h-por) 100%) fixed; }
 .hub-fundo { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 .hub-fundo::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 80% 20%, rgba(139, 92, 246, .35), transparent 45%), radial-gradient(circle at 10% 80%, rgba(56, 189, 248, .18), transparent 40%); }
-.hub-cidade { position: absolute; bottom: 0; left: 0; width: 100%; height: 45vh; fill: rgba(8, 4, 24, .75); }
+.hub-cidade { position: absolute; bottom: 0; left: 0; width: 100%; height: 45vh; fill: rgba(8, 4, 24, .75); display: none; }
+html.hub-claro .hub-cidade { display: block; }
 .hub-cidade .janelas rect { fill: #ffcf66; opacity: .7; }
 html.hub-claro .hub-cidade { fill: rgba(60, 40, 120, .18); } html.hub-claro .hub-cidade .janelas rect { opacity: .3; }
 
@@ -99,6 +101,9 @@ html.hub-claro .hub-placar div { background: #fff8e6; }
 }
 html.alto-contraste body.hub { background: #000; } html.alto-contraste .hub-card, html.alto-contraste .hub-menu button { background: #000; border-color: #fff; }
 
-/* ilustração opcional (SITE.imagem em aulas.js), só em tela grande */
-.hub-arte { position: fixed; right: 1vw; bottom: 0; height: 72vh; max-width: 30vw; object-fit: contain; z-index: 0; pointer-events: none; }
-@media (max-width: 1250px) { .hub-arte { display: none; } }
+/* personagem (SITE.imagem) ao lado do cartão da aula de hoje, como na arte conceito */
+.hub-hoje { display: grid; grid-template-columns: minmax(180px, 26%) 1fr; align-items: end; gap: 0; }
+.hub-hoje .hub-arte { width: 100%; max-height: 78vh; object-fit: contain; object-position: bottom; align-self: end; margin-right: -2em; position: relative; z-index: 0; -webkit-mask-image: radial-gradient(ellipse 62% 70% at 50% 42%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 62% 70% at 50% 42%, #000 62%, transparent 100%); }
+.hub-hoje .hub-card { position: relative; z-index: 1; align-self: center; }
+.hub-escudo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50% 50% 45% 45%; }
+@media (max-width: 1000px) { .hub-hoje { grid-template-columns: 1fr; } .hub-hoje .hub-arte { display: none; } }

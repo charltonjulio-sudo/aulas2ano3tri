@@ -82,8 +82,8 @@
       if (!hoje.length) return '<section class="hub-card"><h1>Nenhuma aula marcada para hoje.</h1><p>Veja todas em <b>Aulas</b>.</p></section>';
       return hoje.map((a) => {
         const d = DADOS[a.pasta]; if (!d) return "";
-        return '<section class="hub-card destaque"><div class="hub-cab"><span class="hub-escudo" aria-hidden="true">💻</span><div><h1>' + esc(SITE.turma || "") + (SITE.turma ? " — " : "") + esc(d.disciplina || "") + '</h1><p class="hub-sub">Aula ' + esc(num(a, d)) + " — " + esc(nomeCurto(d)) + "</p></div></div>" + botoes(a, d, true) +
-          '<div class="hub-missao"><span aria-hidden="true">🎯</span><div><b>Missão da aula</b><p>' + md(d.objetivo || "Acompanhar o conteúdo e participar do jogo.") + "</p></div></div></section>";
+        return (SITE.imagem ? '<div class="hub-hoje"><img class="hub-arte" src="' + esc(SITE.imagem) + '" alt="">' : "") + '<section class="hub-card destaque"><div class="hub-cab"><span class="hub-escudo" aria-hidden="true">' + (SITE.avatar ? '<img src="' + esc(SITE.avatar) + '" alt="">' : "💻") + '</span><div><h1>' + esc(SITE.turma || "") + (SITE.turma ? " — " : "") + esc(d.disciplina || "") + '</h1><p class="hub-sub">Aula ' + esc(num(a, d)) + " — " + esc(nomeCurto(d)) + "</p></div></div>" + botoes(a, d, true) +
+          '<div class="hub-missao"><span aria-hidden="true">🎯</span><div><b>Missão da aula</b><p>' + md(d.objetivo || "Acompanhar o conteúdo e participar do jogo.") + "</p></div></div></section>" + (SITE.imagem ? "</div>" : "");
       }).join("");
     },
     aulas() {
@@ -131,9 +131,11 @@
     const h = LISTA.find((a) => a.hoje), d = h && DADOS[h.pasta];
     $("#t-turma").innerHTML = SITE.turma ? '<span aria-hidden="true">👑</span> ' + esc(SITE.turma) + (SITE.disciplina ? " <small>" + esc(SITE.disciplina) + "</small>" : "") : "";
     $("#t-aula").innerHTML = d ? "<span>📅 Aula " + esc(num(h, d)) + "</span><span>📄 " + esc(nomeCurto(d)) + "</span>" : "";
-    if (SITE.imagem) document.body.insertAdjacentHTML("beforeend", '<img class="hub-arte" src="' + esc(SITE.imagem) + '" alt="">');
     mostrar(location.hash.slice(1) in VIEWS ? location.hash.slice(1) : "hoje");
   }
+  /* atalho do professor: 3 toques rápidos no 🎓 abrem a área do professor (que pede a frase) */
+  let toques = 0, tt = 0;
+  $(".hub-logo").addEventListener("click", () => { clearTimeout(tt); toques++; tt = setTimeout(() => (toques = 0), 1200); if (toques >= 3) location.href = "professor.html"; });
   carregar(0);
 })();
 </script>
