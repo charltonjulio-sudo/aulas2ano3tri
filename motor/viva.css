@@ -243,3 +243,21 @@ kbd { background: #f1f3f4; border: 1px solid #9aa0a6; border-bottom-width: 3px; 
 
 .ctx-aluno table.pl { font-size: .85em; }
 .ctx-aluno .pl-fx .btn { padding: .3em .6em; }
+
+.des-como { margin: .2em 0 .6em; padding-left: 1.3em; } .des-como li { margin: .25em 0; }
+.des-txt { display: flex; gap: .4em; margin-bottom: .4em; flex-wrap: wrap; } .des-txt input { flex: 1; min-width: 8em; font: inherit; padding: .4em; border: 2px solid var(--borda); border-radius: 8px; }
+.des-aviso { min-height: 1.2em; margin: .2em 0; font-weight: 600; color: var(--azul); }
+.prof-clicavel .chip:not(.fixo), .prof-clicavel .grupo { cursor: pointer; }
+.prof-clicavel .chip.sel { background: var(--dourado); }
+
+#portao { position: fixed; inset: 0; background: #120a2a; display: flex; align-items: center; justify-content: center; z-index: 100; font-size: 18px; }
+#portao form { background: #fff; color: var(--texto); padding: 1.5em; border-radius: 16px; width: min(92vw, 380px); text-align: center; }
+#portao input { width: 100%; font-size: 1.1em; padding: .5em; border: 2px solid var(--azul2); border-radius: 8px; }
+#portao .msg { color: var(--vermelho); min-height: 1.2em; }
+/* QR na TV */
+#tv-qr { position: absolute; inset: 0; background: #0a061e; color: #fff; display: flex; align-items: center; justify-content: center; gap: 70px; z-index: 5; font-family: var(--fonte); }
+#tv-qr .qr-caixa { background: #fff; padding: 22px; border-radius: 20px; width: 520px; } #tv-qr .qr-caixa svg { width: 100%; height: auto; display: block; }
+#tv-qr h2 { font-size: 64px; margin: 0 0 20px; color: #ffe082; } #tv-qr p { font-size: 34px; margin: 10px 0; max-width: 760px; } #tv-qr .url { font: 700 30px var(--mono); word-break: break-all; color: #fff; }
+.tv-btn-qr { position: fixed; top: 10px; right: 10px; z-index: 10; opacity: .2; background: #fff; color: #111; border-radius: 10px; padding: 8px 14px; font-size: 18px; }
+.tv-btn-qr:hover, .tv-btn-qr:focus { opacity: 1; }
+.links-alunos label { display: block; font-weight: 700; margin-top: .7em; } .links-alunos .linha { display: flex; gap: .4em; } .links-alunos input { flex: 1; font: 15px var(--mono); padding: .4em; }

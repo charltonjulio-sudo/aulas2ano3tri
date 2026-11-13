@@ -140,12 +140,12 @@
       }).join("") + "</div>" + (ctx === "aluno" ? '<p class="dica-uso">Toque nas cartas para virar.</p>' : "");
     }
     // classificar
-    const feitos = ctx === "aluno" ? V.alunoResp(s.id) || {} : {};
+    const feitos = ctx === "aluno" ? V.alunoResp(s.id) || {} : (est.cl && est.cl[s.id]) || {};
     const mostraTudo = ctx !== "aluno" && est.revelado;
     return titulo(s) + (s.texto ? '<p class="s-texto">' + md(s.texto) + "</p>" : "") +
-      '<div class="classif-itens">' + s.itens.map((it, i) => (ctx === "aluno" && feitos[i] !== undefined) || mostraTudo ? "" : '<button type="button" class="chip" data-item="' + i + '">' + md(it.texto) + "</button>").join("") + "</div>" +
+      '<div class="classif-itens">' + s.itens.map((it, i) => feitos[i] !== undefined || mostraTudo ? "" : '<button type="button" class="chip" data-item="' + i + '">' + md(it.texto) + "</button>").join("") + "</div>" +
       '<div class="classif-grupos">' + s.grupos.map((gr, gi) => '<div class="grupo" data-grupo="' + gi + '"><div class="grupo-nome">' + md(gr) + '</div><div class="grupo-itens">' +
-        s.itens.map((it, i) => ((ctx === "aluno" && feitos[i] === gi) || (mostraTudo && it.grupo === gi) ? '<span class="chip fixo">' + md(it.texto) + "</span>" : "")).join("") + "</div></div>").join("") + "</div>" +
+        s.itens.map((it, i) => (feitos[i] === gi || (mostraTudo && it.grupo === gi) ? '<span class="chip fixo">' + md(it.texto) + "</span>" : "")).join("") + "</div></div>").join("") + "</div>" +
       (ctx === "aluno" ? '<p class="dica-uso">Toque num cartão e depois no grupo certo.</p>' : "");
   };
 
@@ -159,7 +159,7 @@
     if (s.modo === "python") h += '<div class="py-box"><textarea class="py-editor" rows="' + Math.max(4, (s.inicial || "").split("\n").length + 1) + '" aria-label="Seu código Python"></textarea><div class="py-botoes"><button type="button" class="btn" data-rodar>▶ Rodar</button><button type="button" class="btn sec" data-restaurar>↺ Começar de novo</button></div><pre class="py-saida" aria-live="polite"></pre></div>';
     if (s.modo === "planilha") h += '<div class="pl-box" data-planilha></div>';
     if (s.modo === "texto") h += '<textarea class="resp-texto" rows="6" data-resp aria-label="Sua resposta"></textarea><button type="button" class="btn sec" data-copiar>📋 Copiar resposta</button>';
-    if (s.modo === "desenho") h += '<div class="desenho"><div class="cores">' + ["#1a1a2e", "#C62828", "#1565C0", "#2E7D32", "#E65100", "#7B1FA2"].map((c, i) => '<button type="button" class="cor' + (i === 0 ? " sel" : "") + '" style="background:' + c + '" data-cor="' + c + '" aria-label="cor ' + (i + 1) + '"></button>').join("") + '<button type="button" class="btn sec" data-limpar>🧽 Limpar</button><button type="button" class="btn" data-baixar>💾 Baixar</button></div><canvas width="900" height="600" aria-label="Área de desenho"></canvas></div>';
+    if (s.modo === "desenho") h += (s.como ? '<ol class="des-como">' + s.como.map((x) => "<li>" + md(x) + "</li>").join("") + "</ol>" : "") + '<div class="desenho"><div class="cores">' + ["#1a1a2e", "#C62828", "#1565C0", "#2E7D32", "#E65100", "#7B1FA2"].map((c, i) => '<button type="button" class="cor' + (i === 0 ? " sel" : "") + '" style="background:' + c + '" data-cor="' + c + '" aria-label="cor ' + (i + 1) + '"></button>').join("") + '<button type="button" class="btn sec" data-limpar>🧽 Limpar</button><button type="button" class="btn" data-baixar>💾 Baixar</button></div><div class="des-txt"><input type="text" maxlength="30" placeholder="Palavra para pôr no desenho" aria-label="Palavra para pôr no desenho"><button type="button" class="btn sec" data-texto>🔤 Pôr no desenho</button></div><p class="des-aviso" aria-live="polite"></p><canvas width="900" height="600" aria-label="Área de desenho"></canvas></div>';
     if (s.dica) h += '<details class="dica"><summary>💡 Dica</summary><p>' + md(s.dica) + "</p></details>";
     return h;
   };
@@ -369,7 +369,17 @@
   /* ---------- área de desenho (para quem se expressa melhor desenhando) ---------- */
   V.quadroDesenho = (cv, s, el) => {
     const cx = cv.getContext("2d");
-    const branco = () => { cx.fillStyle = "#fff"; cx.fillRect(0, 0, cv.width, cv.height); };
+    const molde = () => {
+      const m = s.molde || [];
+      if (!m.length) return;
+      const w = cv.width / m.length;
+      cx.save(); cx.strokeStyle = "#9aa3b5"; cx.lineWidth = 4; cx.setLineDash([14, 10]);
+      m.forEach((rot, k) => { cx.strokeRect(k * w + 10, 10, w - 20, cv.height - 20); });
+      cx.setLineDash([]); cx.fillStyle = "#5a6072"; cx.font = "bold 34px sans-serif"; cx.textAlign = "center";
+      m.forEach((rot, k) => cx.fillText(rot, k * w + w / 2, 52));
+      cx.restore();
+    };
+    const branco = () => { cx.fillStyle = "#fff"; cx.fillRect(0, 0, cv.width, cv.height); molde(); };
     branco();
     const salvo = V.alunoResp(s.id + ":des");
     if (salvo) { const im = new Image(); im.onload = () => cx.drawImage(im, 0, 0); im.src = salvo; }
@@ -377,7 +387,21 @@
     cx.lineWidth = 6; cx.lineCap = "round"; cx.lineJoin = "round";
     const pt = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * (cv.width / r.width), (e.clientY - r.top) * (cv.height / r.height)]; };
     cv.style.touchAction = "none";
-    cv.addEventListener("pointerdown", (e) => { des = true; cv.setPointerCapture(e.pointerId); cx.strokeStyle = cor; cx.beginPath(); cx.moveTo(...pt(e)); });
+    let textoPendente = "";
+    const aviso = V.$(".des-aviso", el);
+    V.$("[data-texto]", el).addEventListener("click", () => {
+      const inp = V.$(".des-txt input", el); textoPendente = inp.value.trim();
+      if (!textoPendente) { aviso.textContent = "Escreva a palavra na caixa primeiro."; return; }
+      aviso.textContent = "Agora toque no desenho onde a palavra vai ficar. 👆";
+    });
+    cv.addEventListener("pointerdown", (e) => {
+      if (textoPendente) {
+        const [x, y] = pt(e); cx.fillStyle = cor; cx.font = "bold 44px sans-serif"; cx.textAlign = "center"; cx.fillText(textoPendente, x, y);
+        textoPendente = ""; V.$(".des-txt input", el).value = ""; aviso.textContent = "";
+        try { V.alunoResp(s.id + ":des", cv.toDataURL("image/png")); } catch (x2) { /* */ }
+        return;
+      }
+      des = true; cv.setPointerCapture(e.pointerId); cx.strokeStyle = cor; cx.beginPath(); cx.moveTo(...pt(e)); });
     cv.addEventListener("pointermove", (e) => { if (!des) return; cx.lineTo(...pt(e)); cx.stroke(); });
     const fim = () => { if (!des) return; des = false; try { V.alunoResp(s.id + ":des", cv.toDataURL("image/png")); } catch (x) { /* */ } };
     cv.addEventListener("pointerup", fim); cv.addEventListener("pointercancel", fim);

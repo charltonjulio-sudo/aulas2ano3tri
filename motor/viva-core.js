@@ -2,7 +2,7 @@
 (function (g) {
   "use strict";
   const V = (g.Viva = g.Viva || {});
-  V.VERSAO = "1.1.0";
+  V.VERSAO = "1.2.0";
 
   V.store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -126,6 +126,24 @@
     if (typeof g.qrcode !== "function") return "";
     const q = g.qrcode(0, "M"); q.addData(texto); q.make();
     return q.createSvgTag({ cellSize: celula || 6, margin: 2, scalable: true });
+  };
+
+  /* Portão do professor: pede a frase (config.profSenhaHash ou jogoSenhaHash) uma vez por navegador.
+     Site estático é público: isto afasta curiosos, não é segurança. Quem controla TV e celulares é o login do Firebase. */
+  V.portaoProfessor = (aoLiberar, linkAluno) => {
+    const c = g.VIVA_CONFIG || {}, h = c.profSenhaHash || c.jogoSenhaHash;
+    if (!h || V.store.get("viva:prof-ok", "") === h) return aoLiberar();
+    const d = document.createElement("div");
+    d.id = "portao";
+    d.innerHTML = '<form><h2>🔒 Área do professor</h2><p>Digite a frase do professor.</p><input type="password" autocomplete="current-password" aria-label="Frase do professor"><p class="msg" aria-live="polite"></p><button class="btn" type="submit">Entrar</button><p><a href="' + (linkAluno || "../../index.html") + '">Sou aluno → ir para a aula</a></p></form>';
+    document.body.appendChild(d);
+    const f = d.querySelector("form"), inp = d.querySelector("input");
+    inp.focus();
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      if ((await V.sha256(V.normCodigo(inp.value))) === h) { V.store.set("viva:prof-ok", h); d.remove(); aoLiberar(); }
+      else d.querySelector(".msg").textContent = "Frase diferente.";
+    };
   };
 
   // URL de uma página irmã (mesma pasta da aula)

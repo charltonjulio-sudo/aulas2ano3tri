@@ -1,0 +1,104 @@
+/* Kit Aula Viva — página inicial dos alunos (hub) no estilo "painel de jogo": roxo, dourado e neon.
+   Contraste conferido em ferramentas/contraste.py. Tema claro opcional (html.hub-claro). */
+:root {
+  --h-fundo1: #0c0726; --h-fundo2: #2a1260; --h-por: #c2410c;
+  --h-painel: rgba(20, 12, 51, .9); --h-borda: #7c5cff; --h-borda2: #38bdf8;
+  --h-texto: #f5f3ff; --h-texto2: #d6ccff; --h-ouro: #ffc23d; --h-ouro2: #ffdd80; --h-roxo: #6d28d9; --h-roxo2: #8b5cf6;
+  --h-menu: #1b1142; --h-tinta: #1a1033;
+}
+html.hub-claro { --h-fundo1: #e9e4ff; --h-fundo2: #c7d2fe; --h-por: #fdba74; --h-painel: rgba(255, 255, 255, .95); --h-borda: #6d28d9; --h-borda2: #0369a1; --h-texto: #1a1033; --h-texto2: #3b2a73; --h-menu: #ffffff; }
+body.hub { margin: 0; min-height: 100vh; color: var(--h-texto); font-size: calc(17px * var(--escala)); background: linear-gradient(180deg, var(--h-fundo1) 0%, var(--h-fundo2) 55%, var(--h-por) 100%); background-attachment: fixed; }
+.hub-fundo { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.hub-fundo::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 80% 20%, rgba(139, 92, 246, .35), transparent 45%), radial-gradient(circle at 10% 80%, rgba(56, 189, 248, .18), transparent 40%); }
+.hub-cidade { position: absolute; bottom: 0; left: 0; width: 100%; height: 45vh; fill: rgba(8, 4, 24, .75); }
+.hub-cidade .janelas rect { fill: #ffcf66; opacity: .7; }
+html.hub-claro .hub-cidade { fill: rgba(60, 40, 120, .18); } html.hub-claro .hub-cidade .janelas rect { opacity: .3; }
+
+/* topo */
+.hub-topo { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: .8em; padding: .5em .9em; background: rgba(12, 7, 38, .92); border-bottom: 2px solid var(--h-borda); box-shadow: 0 0 18px rgba(124, 92, 255, .45); flex-wrap: wrap; }
+html.hub-claro .hub-topo { background: rgba(255, 255, 255, .95); }
+.hub-marca { display: flex; align-items: center; gap: .4em; font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 1.35em; letter-spacing: .02em; }
+.hub-logo { font-size: 1.3em; }
+.hub-turma { display: flex; align-items: center; gap: .4em; background: linear-gradient(90deg, #3a2a00, #6b4b00); color: var(--h-ouro2); border: 2px solid var(--h-ouro); border-radius: 10px; padding: .25em .7em; font-weight: 900; font-style: italic; text-transform: uppercase; clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); padding-right: 1.4em; }
+.hub-turma small { color: #fff3cf; font-style: normal; font-weight: 700; text-transform: none; }
+.hub-aula { display: flex; gap: .9em; color: var(--h-texto2); font-weight: 600; flex: 1; min-width: 0; flex-wrap: wrap; }
+.hub-a11y { display: flex; gap: .4em; margin-left: auto; }
+.hub-a11y button { background: transparent; color: var(--h-texto); border: 2px solid var(--h-texto2); border-radius: 8px; min-width: 2.6em; height: 2.4em; font-weight: 700; }
+.hub-a11y button:hover { border-color: var(--h-ouro); }
+
+/* corpo */
+.hub-corpo { position: relative; z-index: 1; display: grid; grid-template-columns: 230px 1fr; gap: 1.2em; padding: 1.2em; max-width: 1200px; margin: 0 auto; }
+.hub-menu { display: flex; flex-direction: column; gap: .7em; }
+.hub-menu button { display: flex; align-items: center; gap: .6em; text-align: left; background: var(--h-menu); color: var(--h-texto); border: 2px solid rgba(124, 92, 255, .55); border-radius: 12px; padding: .8em .9em; font-weight: 800; text-transform: uppercase; font-size: .9em; clip-path: polygon(0 0, 100% 0, 100% 75%, 92% 100%, 0 100%); }
+.hub-menu button span { font-size: 1.4em; }
+.hub-menu button:hover { border-color: var(--h-borda2); }
+.hub-menu button.ativo { background: linear-gradient(90deg, #4a3500, #7a5600); border-color: var(--h-ouro); color: #fff7dd; box-shadow: 0 0 14px rgba(255, 194, 61, .55); }
+html.hub-claro .hub-menu button.ativo { background: #ffe3a3; color: var(--h-tinta); }
+.hub-main { min-width: 0; }
+.hub-carregando { color: var(--h-texto2); }
+
+/* cartões */
+.hub-card { background: var(--h-painel); border: 2px solid var(--h-borda); border-radius: 18px; padding: 1.3em 1.4em; box-shadow: 0 0 0 1px rgba(56, 189, 248, .35) inset, 0 0 22px rgba(124, 92, 255, .4); margin-bottom: 1.2em; clip-path: polygon(0 0, 97% 0, 100% 4%, 100% 100%, 3% 100%, 0 96%); }
+.hub-card h1 { margin: 0 0 .3em; font-size: 1.6em; font-weight: 900; font-style: italic; text-transform: uppercase; line-height: 1.15; }
+.hub-card h2 { margin: 0 0 .2em; font-size: 1.2em; }
+.hub-card h3 { margin: .6em 0 .2em; font-size: 1.05em; color: var(--h-ouro2); }
+html.hub-claro .hub-card h3 { color: #7a4b00; }
+.hub-sub { color: var(--h-texto2); margin: 0 0 .6em; font-size: 1.1em; }
+.hub-cab { display: flex; align-items: center; gap: .9em; margin-bottom: 1em; }
+.hub-escudo { font-size: 2.6em; background: radial-gradient(circle, #3b2a8a, #1b1142); border: 3px solid var(--h-ouro); border-radius: 50% 50% 45% 45%; width: 1.7em; height: 1.8em; display: flex; align-items: center; justify-content: center; flex: none; }
+
+/* botões grandes */
+.hub-botoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1em; margin: .6em 0; }
+.hub-btn { display: flex; align-items: center; gap: .6em; text-decoration: none; font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 1.05em; line-height: 1.1; padding: .8em 1em; border-radius: 14px; border: 3px solid; clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%); transition: transform .15s, box-shadow .15s; }
+.hub-btn .ic { font-size: 1.7em; font-style: normal; }
+.hub-btn:hover, .hub-btn:focus-visible { transform: translateY(-2px); }
+.hub-btn.ouro { background: linear-gradient(180deg, var(--h-ouro2), var(--h-ouro)); color: var(--h-tinta); border-color: #fff1c2; box-shadow: 0 0 18px rgba(255, 194, 61, .7); }
+.hub-btn.roxo { background: linear-gradient(180deg, var(--h-roxo2), var(--h-roxo)); color: #fff; border-color: #c4b5fd; box-shadow: 0 0 18px rgba(139, 92, 246, .7); }
+.hub-botoes.grande .hub-btn { font-size: 1.6em; padding: .9em 1.1em; min-height: 3.2em; }
+.hub-btn.pequeno { display: inline-flex; font-size: .95em; padding: .5em .9em; }
+
+/* missão */
+.hub-missao { display: flex; gap: .8em; align-items: center; margin-top: 1em; background: rgba(12, 7, 38, .6); border: 2px solid var(--h-borda); border-radius: 14px; padding: .7em 1em; }
+html.hub-claro .hub-missao { background: #f1edff; }
+.hub-missao > span { font-size: 2em; }
+.hub-missao b { text-transform: uppercase; font-style: italic; color: var(--h-ouro2); }
+html.hub-claro .hub-missao b { color: #7a4b00; }
+.hub-missao p { margin: .15em 0 0; }
+
+/* listas */
+.hub-lista { display: grid; gap: .9em; }
+.hub-item { display: flex; gap: 1em; align-items: flex-start; background: rgba(12, 7, 38, .45); border: 1px solid rgba(124, 92, 255, .6); border-radius: 14px; padding: .8em; }
+html.hub-claro .hub-item { background: #faf8ff; }
+.hub-item.hoje { border: 2px solid var(--h-ouro); }
+.hub-num { flex: none; width: 2.4em; height: 2.4em; border-radius: 12px; background: #2a1a66; color: var(--h-ouro2); border: 2px solid var(--h-ouro); font-weight: 900; font-size: 1.3em; display: flex; align-items: center; justify-content: center; }
+html.hub-claro .hub-num { background: #fff3cf; color: #5c3a00; }
+.hub-info { flex: 1; min-width: 0; } .hub-info p { margin: .2em 0 .5em; }
+.hub-info ol { margin: .2em 0; padding-left: 1.3em; }
+.hub-tag { font-size: .7em; background: var(--h-ouro); color: var(--h-tinta); border-radius: 99px; padding: .1em .6em; vertical-align: middle; }
+.hub-entrega { color: var(--h-texto2); }
+.hub-estrelas { font-size: 1.2em; } .hub-estrelas .apagada { filter: grayscale(1); opacity: .35; }
+.hub-placar { display: flex; gap: 1em; flex-wrap: wrap; margin: .5em 0 1em; }
+.hub-placar div { flex: 1; min-width: 140px; background: rgba(12, 7, 38, .55); border: 2px solid var(--h-ouro); border-radius: 14px; padding: .7em; text-align: center; }
+html.hub-claro .hub-placar div { background: #fff8e6; }
+.hub-placar b { display: block; font-size: 2em; color: var(--h-ouro2); } html.hub-claro .hub-placar b { color: #7a4b00; }
+.hub-rola { overflow-x: auto; }
+.hub-tab { width: 100%; border-collapse: collapse; } .hub-tab th, .hub-tab td { padding: .45em .6em; border-bottom: 1px solid rgba(124, 92, 255, .4); text-align: left; } .hub-tab td.n { text-align: right; white-space: nowrap; }
+
+/* celular */
+@media (max-width: 760px) {
+  .hub-corpo { grid-template-columns: 1fr; padding: .7em; gap: .7em; }
+  .hub-menu { flex-direction: row; overflow-x: auto; gap: .45em; padding-bottom: .2em; }
+  .hub-menu button { flex: none; padding: .55em .7em; font-size: .78em; clip-path: none; }
+  .hub-menu button span { font-size: 1.2em; }
+  .hub-topo { gap: .4em; padding: .45em .6em; }
+  .hub-marca { font-size: 1.05em; }
+  .hub-aula { display: none; }
+  .hub-card { padding: 1em; clip-path: none; }
+  .hub-card h1 { font-size: 1.25em; }
+  .hub-botoes.grande .hub-btn { font-size: 1.25em; }
+}
+html.alto-contraste body.hub { background: #000; } html.alto-contraste .hub-card, html.alto-contraste .hub-menu button { background: #000; border-color: #fff; }
+
+/* ilustração opcional (SITE.imagem em aulas.js), só em tela grande */
+.hub-arte { position: fixed; right: 1vw; bottom: 0; height: 72vh; max-width: 30vw; object-fit: contain; z-index: 0; pointer-events: none; }
+@media (max-width: 1250px) { .hub-arte { display: none; } }

@@ -158,7 +158,9 @@ window.AULA = {
       checagem: { conf: 92, base: "Atividade do original (slide 17) refeita com tempo possível e passos ensinados antes." }, orig: ["17"] },
 
     { id: "s12", bloco: "b4", tipo: "pratica", modo: "desenho", titulo: "Versão desenho: seus 3 slides",
-      enunciado: "Desenhe os 3 slides. Marque com 🎬 onde vai o vídeo e com 🔗 onde vai o link.",
+      enunciado: "Desenhe como vão ficar os seus 3 slides.",
+      molde: ["Slide 1", "Slide 2", "Slide 3"],
+      como: ["Cada retângulo é um slide.", "Desenhe com o dedo (no PC, com o mouse) o que vai em cada um.", "Escreva **VÍDEO** onde vai o vídeo e **LINK** onde vai o link: digite na caixa, toque em **🔤 Pôr no desenho** e toque no lugar.", "Terminou? Toque em **💾 Baixar** e anexe a imagem no Classroom.", "Prefere papel? Desenhe no caderno e mande uma foto."],
       apoio: { emoji: "🎨", texto: "Desenhe 3 slides." },
       checagem: { conf: 95, base: "Atividade de apoio." } },
 

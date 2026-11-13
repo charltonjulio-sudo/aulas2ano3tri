@@ -120,8 +120,10 @@ window.AULA = {
       prof: { fazer: "Grupos de 3 ou 4. Cada um escreve o seu; o grupo escolhe o melhor para ensaiar.", adapta: "Quem trava na escrita pode fazer a versão desenho (próximo slide).", tempo_min: 10 },
       checagem: { conf: 92, base: "Enunciado reescrito para tirar a ambiguidade do original (\"uma empresa\"). Solução é exemplo, não resposta única." }, orig: ["16", "17", "18", "19"] },
 
-    { id: "s10", bloco: "b4", tipo: "pratica", modo: "desenho", titulo: "Versão desenho: roteiro em 3 quadrinhos",
-      enunciado: "Desenhe 3 quadrinhos: **começo** (o que você quer), **meio** (por quê) e **fim** (o que pede). Escreva 1 palavra em cada.",
+    { id: "s10", bloco: "b4", tipo: "pratica", modo: "desenho", titulo: "Versão desenho: tirinha de 3 cenas",
+      enunciado: "Faça uma **tirinha** de 3 cenas sobre o seu roteiro: o que você quer, por quê e o que você pede.",
+      molde: ["Começo", "Meio", "Fim"],
+      como: ["Cada retângulo é uma cena: **Começo**, **Meio** e **Fim**.", "Desenhe com o dedo (no PC, com o mouse) dentro de cada retângulo.", "Para escrever: digite a palavra na caixa, toque em **🔤 Pôr no desenho** e toque no lugar onde ela vai ficar.", "Terminou? Toque em **💾 Baixar** e anexe a imagem no Classroom.", "Prefere papel? Faça a tirinha no caderno e mande uma foto."],
       apoio: { emoji: "🎨", texto: "3 desenhos: começo, meio, fim." },
       prof: { adapta: "Entrada para quem se expressa melhor desenhando; vale como roteiro.", tempo_min: 0 },
       checagem: { conf: 95, base: "Atividade de apoio sem conteúdo novo." } },

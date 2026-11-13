@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Área do professor</title>
+<link rel="stylesheet" href="motor/viva.css">
+<link rel="stylesheet" href="motor/viva-hub.css">
+<style>
+  .p-acoes { display: flex; flex-wrap: wrap; gap: .5em; margin: .5em 0; }
+  .p-acoes a, .p-acoes button { text-decoration: none; }
+  .p-link { display: flex; gap: .4em; margin: .3em 0; } .p-link input { flex: 1; min-width: 0; font: 14px var(--mono); padding: .35em; border-radius: 6px; border: 1px solid #7c5cff; }
+  .p-status li { margin: .3em 0; }
+  .ok { color: #86efac; } .falta { color: #fdba74; }
+  html.hub-claro .ok { color: #166534; } html.hub-claro .falta { color: #9a3412; }
+</style>
+</head>
+<body class="hub">
+<header class="hub-topo">
+  <div class="hub-marca"><span class="hub-logo" aria-hidden="true">👨‍🏫</span><span>Área do professor</span></div>
+  <div class="hub-a11y"><button type="button" data-a11y="menos" aria-label="Diminuir letra">A−</button><button type="button" data-a11y="mais" aria-label="Aumentar letra">A+</button></div>
+</header>
+<div class="hub-corpo" style="grid-template-columns:1fr"><main class="hub-main" id="main"></main></div>
+<script src="config.js"></script>
+<script src="motor/viva-core.js"></script>
+<script src="aulas.js"></script>
+<script>
+Viva.portaoProfessor(function () {
+  "use strict";
+  const V = Viva, esc = V.esc, $ = V.$, C = window.VIVA_CONFIG || {};
+  V.a11y.init({});
+  const LISTA = (window.AULAS || (window.AULAS_ATUAIS || []).map((a) => Object.assign({ hoje: true }, a))).map((a) => Object.assign({}, a, { pasta: a.pasta.replace(/\/?$/, "/") }));
+  const DADOS = {};
+  const abs = (p) => new URL(p, location.href).href;
+  function carregar(i) {
+    if (i >= LISTA.length) return pronto();
+    const sc = document.createElement("script"); sc.src = LISTA[i].pasta + "aula.js";
+    sc.onload = () => { DADOS[LISTA[i].pasta] = window.AULA; window.AULA = undefined; carregar(i + 1); };
+    sc.onerror = () => carregar(i + 1); document.head.appendChild(sc);
+  }
+  const campo = (rot, url) => '<label style="font-size:.85em;font-weight:700">' + rot + '</label><div class="p-link"><input readonly value="' + esc(url) + '"><button class="btn sec" type="button" data-copiar>📋</button></div>';
+  function pronto() {
+    const fb = C.firebase && C.firebase.apiKey && C.firebase.databaseURL;
+    let h = '<section class="hub-card"><h1>Situação do site</h1><ul class="p-status">' +
+      '<li class="' + (fb ? "ok" : "falta") + '">' + (fb ? "✔ Firebase configurado: os celulares seguem o painel ao vivo (entre no painel com seu login)." : "✖ Firebase vazio: os celulares usam os códigos dos blocos.") + "</li>" +
+      '<li class="' + (C.feedback && C.feedback.url ? "ok" : "falta") + '">' + (C.feedback && C.feedback.url ? "✔ Formulário de feedback ligado." : "✖ Sem formulário de feedback.") + "</li>" +
+      '<li class="ok">✔ Página dos alunos: ' + esc(abs("index.html")) + " (não tem link para esta área).</li>" +
+      "</ul><p>Para mudar a <b>aula de hoje</b>, edite <code>aulas.js</code>: coloque <code>hoje: true</code> só na aula do dia.</p>" + campo("Link da página dos alunos (todas as aulas)", abs("index.html")) + "</section>";
+    h += LISTA.slice().reverse().map((a) => {
+      const d = DADOS[a.pasta]; if (!d) return '<section class="hub-card"><h2>' + esc(a.pasta) + " — aula.js não encontrado</h2></section>";
+      return '<section class="hub-card' + (a.hoje ? " destaque" : "") + '"><h1>' + esc(d.titulo) + (a.hoje ? ' <span class="hub-tag">hoje</span>' : "") + '</h1><p class="hub-sub">' + esc(d.objetivo || "") + "</p>" +
+        '<div class="p-acoes"><a class="hub-btn ouro pequeno" href="' + esc(a.pasta) + 'professor.html"><span class="ic">🎛️</span><span>Painel</span></a><a class="hub-btn roxo pequeno" href="' + esc(a.pasta) + 'tv.html" target="viva-tv"><span class="ic">📺</span><span>TV</span></a></div>' +
+        campo("Link da aula no celular (para o Classroom)", abs(a.pasta + "aluno.html")) + (d.jogo ? campo("Link do jogo", abs(a.pasta + "jogo.html")) : "") + "</section>";
+    }).join("");
+    $("#main").innerHTML = h;
+    V.$$("[data-copiar]").forEach((b) => (b.onclick = async () => { const i = b.previousElementSibling; try { await navigator.clipboard.writeText(i.value); V.toast("Link copiado.", "ok"); } catch (e) { i.select(); V.toast("Selecionado: use Ctrl+C."); } }));
+  }
+  carregar(0);
+}, "index.html");
+</script>
+</body>
+</html>

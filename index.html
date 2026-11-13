@@ -3,46 +3,139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0D47A1">
+<meta name="theme-color" content="#140c33">
 <title>Aula de hoje</title>
 <link rel="stylesheet" href="motor/viva.css">
-<style>
-  .card-aula { background: #fff; border-radius: var(--raio); padding: 1em; margin-bottom: 1em; box-shadow: 0 2px 10px rgba(20,30,60,.08); }
-  .card-aula h2 { margin: .1em 0 .2em; color: var(--azul); }
-  .card-aula .meta { color: var(--texto2); font-size: .85em; margin: 0 0 .7em; }
-  .grande { display: block; text-align: center; text-decoration: none; font-size: 1.15em; padding: .8em; margin: .5em 0; border-radius: 12px; }
-  .qr { max-width: 220px; margin: .4em auto 0; } .qr svg { width: 100%; height: auto; }
-  .rodape { text-align: center; font-size: .8em; margin-top: 2em; }
-  .rodape a { color: var(--texto2); }
-</style>
+<link rel="stylesheet" href="motor/viva-hub.css">
 </head>
-<body class="aluno">
-<header class="topo"><span class="tit">📚 Aula de hoje</span>
-  <button type="button" data-a11y="menos" aria-label="Diminuir letra">A−</button>
-  <button type="button" data-a11y="mais" aria-label="Aumentar letra">A+</button>
-  <button type="button" data-a11y="contraste" aria-label="Alto contraste" aria-pressed="false">🌓</button>
+<body class="hub">
+<div class="hub-fundo" aria-hidden="true">
+  <svg class="hub-cidade" viewBox="0 0 1600 400" preserveAspectRatio="xMidYMax slice"><path d="M0 400V250h70v-40h60v60h50V180h90v90h40v-60h80v-90h70v150h60v-50h90v70h40V140h110v130h50v-80h70v60h60V210h90v60h70v-90h80v100h60v-40h90v160z" /><g class="janelas"><rect x="215" y="200" width="14" height="18"/><rect x="245" y="200" width="14" height="18"/><rect x="215" y="235" width="14" height="18"/><rect x="420" y="150" width="14" height="18"/><rect x="450" y="150" width="14" height="18"/><rect x="420" y="190" width="14" height="18"/><rect x="760" y="165" width="14" height="18"/><rect x="790" y="165" width="14" height="18"/><rect x="820" y="205" width="14" height="18"/><rect x="1100" y="235" width="14" height="18"/><rect x="1330" y="205" width="14" height="18"/><rect x="1360" y="205" width="14" height="18"/></g></svg>
+</div>
+
+<header class="hub-topo">
+  <div class="hub-marca"><span class="hub-logo" aria-hidden="true">🎓</span><span id="t-pagina">Aula de hoje</span></div>
+  <div class="hub-turma" id="t-turma"></div>
+  <div class="hub-aula" id="t-aula"></div>
+  <div class="hub-a11y">
+    <button type="button" data-a11y="menos" aria-label="Diminuir letra">A−</button>
+    <button type="button" data-a11y="mais" aria-label="Aumentar letra">A+</button>
+    <button type="button" id="b-tema" aria-label="Tema claro ou escuro">🌙</button>
+  </div>
 </header>
-<main class="aula" id="lista"></main>
+
+<div class="hub-corpo">
+  <nav class="hub-menu" aria-label="Seções">
+    <button type="button" data-ver="hoje" class="ativo"><span aria-hidden="true">🏠</span> Aula de hoje</button>
+    <button type="button" data-ver="aulas"><span aria-hidden="true">📖</span> Aulas</button>
+    <button type="button" data-ver="atividades"><span aria-hidden="true">✅</span> Atividades</button>
+    <button type="button" data-ver="desafios"><span aria-hidden="true">🏆</span> Desafios</button>
+    <button type="button" data-ver="progresso"><span aria-hidden="true">📊</span> Progresso</button>
+  </nav>
+  <main class="hub-main" id="main" aria-live="polite"><p class="hub-carregando">Carregando…</p></main>
+</div>
+
+<script src="config.js"></script>
 <script src="motor/viva-core.js"></script>
-<script src="motor/qrcode.js"></script>
 <script src="aulas.js"></script>
 <script>
-  (function () {
-    const V = Viva, L = window.AULAS_ATUAIS || [], m = V.$("#lista");
-    V.a11y.init({});
-    if (!L.length) { m.innerHTML = '<div class="card-aula"><h2>Nenhuma aula publicada agora.</h2><p>Aguarde o professor. 🙂</p></div>'; return; }
-    const prof = new URLSearchParams(location.search).has("professor");
-    m.innerHTML = (L.length > 1 ? "<p><b>Escolha a sua turma:</b></p>" : "") + L.map((a, k) => {
-      const base = a.pasta.replace(/\/?$/, "/");
-      return '<section class="card-aula"><h2>' + V.esc(a.rotulo) + '</h2><p class="meta">' + V.esc(a.titulo || "") + (a.data ? " · " + V.esc(a.data.split("-").reverse().join("/")) : "") + "</p>" +
-        '<a class="btn grande" href="' + base + 'aluno.html">📱 Acompanhar a aula</a>' +
-        (a.jogo ? '<a class="btn sec grande" href="' + base + 'jogo.html">🎮 Jogo da aula</a>' : "") +
-        (a.extra || []).map((x) => '<a class="btn sec grande" href="' + V.esc(x.url) + '" target="_blank" rel="noopener">' + V.esc(x.rotulo) + "</a>").join("") +
-        (prof ? '<p><a href="' + base + 'professor.html">👨‍🏫 Painel do professor</a> · <a href="' + base + 'tv.html">📺 TV</a></p><div class="qr" data-qr="' + k + '"></div>' : "") + "</section>";
-    }).join("");
-    if (prof) V.$$("[data-qr]").forEach((d) => (d.innerHTML = V.qrSVG(new URL(L[+d.dataset.qr].pasta.replace(/\/?$/, "/") + "aluno.html", location.href).href, 6)));
-    m.insertAdjacentHTML("beforeend", '<p class="rodape"><a href="?professor">professor</a></p>');
-  })();
+(function () {
+  "use strict";
+  const V = Viva, esc = V.esc, md = V.md, $ = V.$;
+  const SITE = window.SITE || {};
+  // compatível com o formato antigo (AULAS_ATUAIS)
+  const LISTA = (window.AULAS || (window.AULAS_ATUAIS || []).map((a) => Object.assign({ hoje: true }, a))).map((a) => Object.assign({}, a, { pasta: a.pasta.replace(/\/?$/, "/") }));
+  const DADOS = {};
+  V.a11y.init({});
+
+  /* tema claro/escuro */
+  const temaAtual = () => V.store.get("viva:hub-tema", "escuro");
+  const tema = () => { document.documentElement.classList.toggle("hub-claro", temaAtual() === "claro"); $("#b-tema").textContent = temaAtual() === "claro" ? "☀️" : "🌙"; };
+  $("#b-tema").onclick = () => { V.store.set("viva:hub-tema", temaAtual() === "claro" ? "escuro" : "claro"); tema(); };
+  tema();
+
+  /* lê o aula.js de cada aula, uma de cada vez */
+  function carregar(i) {
+    if (i >= LISTA.length) return pronto();
+    const sc = document.createElement("script");
+    sc.src = LISTA[i].pasta + "aula.js";
+    sc.onload = () => { DADOS[LISTA[i].pasta] = window.AULA; window.AULA = undefined; carregar(i + 1); };
+    sc.onerror = () => carregar(i + 1);
+    document.head.appendChild(sc);
+  }
+
+  const num = (a, d) => a.numero || ((d && d.titulo || "").match(/Aula\s+(\d+)/i) || [])[1] || "";
+  const nomeCurto = (d) => (d ? d.titulo.replace(/^Aula\s+\d+\s*[—–-]\s*/i, "") : "");
+  const estrelasJogo = (d) => { if (!d || !d.jogo) return null; const st = V.store.get("viva:jogo:" + d.id, null); const f = d.jogo.fases; return { tem: f.reduce((s, x) => s + ((((st && st.fases && st.fases[x.id]) || {}).primeira) || 0), 0), max: f.length * 3 }; };
+  const estrelasAula = (d) => (d ? (V.store.get("viva:aluno:" + d.id, {}).adesivos || 0) : 0);
+
+  function botoes(a, d, grande) {
+    const n = num(a, d);
+    return '<div class="hub-botoes' + (grande ? " grande" : "") + '">' +
+      '<a class="hub-btn ouro" href="' + esc(a.pasta) + 'aluno.html"><span class="ic" aria-hidden="true">▶</span><span>Acompanhar<br>a aula</span></a>' +
+      (d && d.jogo ? '<a class="hub-btn roxo" href="' + esc(a.pasta) + 'jogo.html"><span class="ic" aria-hidden="true">🎮</span><span>Jogo da<br>Aula ' + esc(n) + "</span></a>" : "") + "</div>";
+  }
+
+  const VIEWS = {
+    hoje() {
+      const hoje = LISTA.filter((a) => a.hoje);
+      if (!hoje.length) return '<section class="hub-card"><h1>Nenhuma aula marcada para hoje.</h1><p>Veja todas em <b>Aulas</b>.</p></section>';
+      return hoje.map((a) => {
+        const d = DADOS[a.pasta]; if (!d) return "";
+        return '<section class="hub-card destaque"><div class="hub-cab"><span class="hub-escudo" aria-hidden="true">💻</span><div><h1>' + esc(SITE.turma || "") + (SITE.turma ? " — " : "") + esc(d.disciplina || "") + '</h1><p class="hub-sub">Aula ' + esc(num(a, d)) + " — " + esc(nomeCurto(d)) + "</p></div></div>" + botoes(a, d, true) +
+          '<div class="hub-missao"><span aria-hidden="true">🎯</span><div><b>Missão da aula</b><p>' + md(d.objetivo || "Acompanhar o conteúdo e participar do jogo.") + "</p></div></div></section>";
+      }).join("");
+    },
+    aulas() {
+      return '<section class="hub-card"><h1>📖 Aulas</h1><div class="hub-lista">' + LISTA.slice().reverse().map((a) => {
+        const d = DADOS[a.pasta]; if (!d) return "";
+        return '<article class="hub-item' + (a.hoje ? " hoje" : "") + '"><div class="hub-num">' + esc(num(a, d)) + '</div><div class="hub-info"><h2>' + esc(nomeCurto(d)) + (a.hoje ? ' <span class="hub-tag">hoje</span>' : "") + "</h2><p>" + md(d.objetivo || "") + "</p>" + botoes(a, d) + "</div></article>";
+      }).join("") + "</div></section>";
+    },
+    atividades() {
+      const blocos = LISTA.slice().reverse().map((a) => {
+        const d = DADOS[a.pasta]; if (!d) return "";
+        const at = d.slides.filter((s) => s.tipo === "atividade");
+        if (!at.length) return "";
+        return '<article class="hub-item"><div class="hub-num">' + esc(num(a, d)) + '</div><div class="hub-info"><h2>' + esc(nomeCurto(d)) + "</h2>" + at.map((s) => "<h3>" + md(s.titulo) + "</h3>" + (s.entrega ? '<p class="hub-entrega">📤 ' + md(s.entrega) + "</p>" : "") + "<ol>" + s.itens.map((x) => "<li>" + md(x) + "</li>").join("") + "</ol>").join("") + "</div></article>";
+      }).join("");
+      return '<section class="hub-card"><h1>✅ Atividades</h1><p class="hub-sub">As atividades para casa e as entregas ficam no Google Classroom.</p><div class="hub-lista">' + (blocos || "<p>Nenhuma atividade ainda.</p>") + "</div></section>";
+    },
+    desafios() {
+      return '<section class="hub-card"><h1>🏆 Desafios</h1><div class="hub-lista">' + LISTA.slice().reverse().map((a) => {
+        const d = DADOS[a.pasta]; if (!d || !d.jogo) return "";
+        const e = estrelasJogo(d), cheias = Math.round((e.tem / e.max) * 5);
+        return '<article class="hub-item"><div class="hub-num">' + esc(d.jogo.emoji || "🎮") + '</div><div class="hub-info"><h2>' + esc(d.jogo.titulo) + "</h2><p>Jogo da Aula " + esc(num(a, d)) + " — " + esc(nomeCurto(d)) + '</p><p class="hub-estrelas" aria-label="' + e.tem + " de " + e.max + ' estrelas">' + "⭐".repeat(cheias) + '<span class="apagada">' + "⭐".repeat(5 - cheias) + "</span> " + e.tem + "/" + e.max + '</p><a class="hub-btn roxo pequeno" href="' + esc(a.pasta) + 'jogo.html"><span class="ic" aria-hidden="true">🎮</span><span>Jogar</span></a></div></article>';
+      }).join("") + "</div></section>";
+    },
+    progresso() {
+      let totA = 0, totJ = 0, maxJ = 0;
+      const linhas = LISTA.map((a) => {
+        const d = DADOS[a.pasta]; if (!d) return "";
+        const ea = estrelasAula(d), ej = estrelasJogo(d); totA += ea; if (ej) { totJ += ej.tem; maxJ += ej.max; }
+        return "<tr><td>Aula " + esc(num(a, d)) + "</td><td>" + esc(nomeCurto(d)) + '</td><td class="n">⭐ ' + ea + '</td><td class="n">' + (ej ? ej.tem + "/" + ej.max : "—") + "</td></tr>";
+      }).join("");
+      return '<section class="hub-card"><h1>📊 Progresso</h1><p class="hub-sub">Fica salvo neste aparelho. Em outro celular começa do zero.</p><div class="hub-placar"><div><b>' + totA + '</b><span>estrelas nas aulas</span></div><div><b>' + totJ + "/" + maxJ + '</b><span>estrelas nos jogos</span></div></div><div class="hub-rola"><table class="hub-tab"><thead><tr><th>Aula</th><th>Tema</th><th>Na aula</th><th>No jogo</th></tr></thead><tbody>' + linhas + "</tbody></table></div></section>";
+    },
+  };
+
+  function mostrar(v) {
+    V.$$(".hub-menu button").forEach((b) => b.classList.toggle("ativo", b.dataset.ver === v));
+    $("#main").innerHTML = VIEWS[v]();
+    $("#t-pagina").textContent = { hoje: "Aula de hoje", aulas: "Aulas", atividades: "Atividades", desafios: "Desafios", progresso: "Progresso" }[v];
+    history.replaceState(null, "", "#" + v);
+  }
+  V.$$(".hub-menu button").forEach((b) => (b.onclick = () => mostrar(b.dataset.ver)));
+
+  function pronto() {
+    const h = LISTA.find((a) => a.hoje), d = h && DADOS[h.pasta];
+    $("#t-turma").innerHTML = SITE.turma ? '<span aria-hidden="true">👑</span> ' + esc(SITE.turma) + (SITE.disciplina ? " <small>" + esc(SITE.disciplina) + "</small>" : "") : "";
+    $("#t-aula").innerHTML = d ? "<span>📅 Aula " + esc(num(h, d)) + "</span><span>📄 " + esc(nomeCurto(d)) + "</span>" : "";
+    if (SITE.imagem) document.body.insertAdjacentHTML("beforeend", '<img class="hub-arte" src="' + esc(SITE.imagem) + '" alt="">');
+    mostrar(location.hash.slice(1) in VIEWS ? location.hash.slice(1) : "hoje");
+  }
+  carregar(0);
+})();
 </script>
 </body>
 </html>

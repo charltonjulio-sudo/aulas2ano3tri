@@ -58,7 +58,7 @@
   <button id="b-play" type="button" title="Iniciar/pausar cronômetro">▶</button>
   <span class="relogio peq" id="t-slide" title="Tempo neste slide">00:00</span>
   <button id="b-tv" type="button">📺 Abrir TV</button>
-  <button id="b-qr" type="button">📱 QR dos alunos</button>
+  <button id="b-qr" type="button">📱 Alunos: QR e links</button>
   <button id="b-zerar" type="button">🧹 Zerar aula</button>
   <button class="pill" id="b-aud" type="button" hidden>🔎 Auditoria</button>
 </header>
@@ -78,9 +78,17 @@
 </div>
 
 <dialog id="d-qr">
-  <h2 style="margin-top:0">📱 Aula no celular</h2>
-  <div class="qr-grande" id="qr"></div>
-  <p class="url" id="qr-url"></p>
+  <h2 style="margin-top:0">📱 Alunos: QR e links</h2>
+  <div style="display:flex;gap:1.2em;flex-wrap:wrap;align-items:flex-start">
+    <div class="qr-grande" id="qr" style="width:min(40vh,300px)"></div>
+    <div class="links-alunos" style="flex:1;min-width:280px">
+      <p><button class="btn" type="button" id="b-qr-tv">📺 Mostrar QR na TV</button></p>
+      <label for="l-aluno">Aula no celular (manda no Classroom quando não tiver TV)</label><div class="linha"><input id="l-aluno" readonly><button class="btn sec" type="button" data-copia="l-aluno">📋</button></div>
+      <label for="l-jogo">Jogo da aula</label><div class="linha"><input id="l-jogo" readonly><button class="btn sec" type="button" data-copia="l-jogo">📋</button></div>
+      <label for="l-site">Página inicial dos alunos (todas as aulas)</label><div class="linha"><input id="l-site" readonly><button class="btn sec" type="button" data-copia="l-site">📋</button></div>
+      <p style="font-size:.9em">Nenhum desses links abre a área do professor.</p>
+    </div>
+  </div>
   <div id="qr-cods"></div>
   <p><button class="btn" type="button" onclick="this.closest('dialog').close()">Fechar</button></p>
 </dialog>
@@ -108,11 +116,12 @@
 <script src="aula.js"></script>
 <script src="codigos.js"></script>
 <script>
-(function () {
+Viva.portaoProfessor(function () {
   "use strict";
   const V = Viva, A = window.AULA, S = A.slides, COD = window.AULA_CODIGOS || {};
   const CH = "viva:prof:" + A.id;
-  let st = Object.assign({ i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: 1, qe: {} }, V.store.get(CH, {}));
+  let st = Object.assign({ i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: 1, qe: {}, cl: {}, qr: false }, V.store.get(CH, {}));
+  st.qr = false;
   const ef = (k) => V.efetivo(S[k], st);
   st.rodando = false;
   const $ = V.$;
@@ -144,12 +153,13 @@
   function publicar() {
     st.max = Math.max(st.max, st.i);
     V.store.set(CH, st);
-    V.Sync.publicar({ aula: A.id, i: st.i, passo: st.passo, revelado: st.revelado, max: st.max, zq: st.zq, qe: st.qe, ts: Date.now() }, (s, msg) => { fbStatus = s === "ok" ? "" : msg; pintaFB(); });
+    V.Sync.publicar({ aula: A.id, i: st.i, passo: st.passo, revelado: st.revelado, max: st.max, zq: st.zq, qe: st.qe, cl: st.cl, qr: st.qr, ts: Date.now() }, (s, msg) => { fbStatus = s === "ok" ? "" : msg; pintaFB(); });
   }
 
   function desenhar() {
     const s = ef(st.i);
-    V.render(s, prev, "tv", { passo: st.passo, revelado: st.revelado, zq: st.zq });
+    V.render(s, prev, "tv", { passo: st.passo, revelado: st.revelado, zq: st.zq, cl: st.cl });
+    if (s.tipo === "cards" && s.modo === "classificar") ligarClassificar(s);
     V.$("#q-ctrl").hidden = s.tipo !== "quadro";
     V.$$(".it", lista).forEach((b) => b.classList.toggle("atual", +b.dataset.i === st.i));
     const at = V.$('.it[data-i="' + st.i + '"]', lista); at && at.scrollIntoView({ block: "nearest" });
@@ -158,6 +168,19 @@
     $("#b-rev").hidden = !V.temRevelar(s);
     $("#b-rev").textContent = st.revelado ? "🙈 Esconder (R)" : "👁 Revelar (R)";
     notas(s, n);
+  }
+
+  /* "Nós fazemos": o professor classifica na prévia e a TV acompanha */
+  function ligarClassificar(s) {
+    prev.classList.add("prof-clicavel");
+    let sel = null;
+    V.$$("[data-item]", prev).forEach((b) => (b.onclick = () => { sel = +b.dataset.item; V.$$("[data-item]", prev).forEach((x) => x.classList.toggle("sel", x === b)); }));
+    V.$$("[data-grupo]", prev).forEach((g) => (g.onclick = () => {
+      if (sel === null) return V.toast("Clique primeiro num cartão.");
+      if (s.itens[sel].grupo !== +g.dataset.grupo) { g.classList.add("treme"); setTimeout(() => g.classList.remove("treme"), 500); return V.toast("Não é desse grupo. " + (s.itens[sel].dica || "")); }
+      st.cl = Object.assign({}, st.cl, { [s.id]: Object.assign({}, st.cl[s.id], { [sel]: +g.dataset.grupo }) });
+      publicar(); desenhar();
+    }));
   }
 
   function nt(cls, tit, html) { return html ? '<div class="nt ' + cls + '"><h4>' + tit + "</h4>" + html + "</div>" : ""; }
@@ -186,6 +209,7 @@
     if (s.tipo === "quiz") h += nt("info", "✅ Gabarito", "<p><b>" + "ABCDEF"[s.correta] + ")</b> " + md(s.opcoes[s.correta]) + "</p>" + (s.explicacao ? "<p>" + md(s.explicacao) + "</p>" : ""));
     if (s.tipo === "pratica" && s.solucao) h += nt("info", "✅ Solução", s.modo === "python" ? '<pre class="codigo">' + V.realce(s.solucao) + "</pre>" : "<p>" + md(s.solucao) + "</p>");
     if (s.tipo === "caso" && s.resposta) h += nt("info", "✅ Resposta do caso", "<p>" + md(s.resposta) + "</p>");
+    if (s.tipo === "cards" && s.modo === "classificar") h += nt("fazer", "🖱️ Classificar com a turma", "<p>Clique num cartão da prévia e depois no grupo que a turma escolher. Na TV só entra o que estiver certo. R mostra tudo de uma vez.</p>");
     if (s.apoio) h += nt("adapta", "🧩 No modo apoio o aluno vê", "<p>" + (s.apoio.emoji || "") + " " + md(s.apoio.texto) + "</p>");
     h += nt("adapta", "♿ Adaptar", p.adapta && "<p>" + md(p.adapta) + "</p>");
     h += nt("nao", "⚠️ Não adaptar", p.nao_adapta && "<p>" + md(p.nao_adapta) + "</p>");
@@ -221,7 +245,7 @@
   let zConf = 0;
   $("#b-zerar").onclick = () => {
     if (Date.now() - zConf > 3000) { zConf = Date.now(); $("#b-zerar").textContent = "Confirmar zerar?"; setTimeout(() => ($("#b-zerar").textContent = "🧹 Zerar aula"), 3000); return; }
-    st = { i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: st.zq, qe: st.qe };
+    st = { i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: st.zq, qe: st.qe, cl: {}, qr: false };
     $("#b-zerar").textContent = "🧹 Zerar aula"; publicar(); desenhar(); pintaTempo(); V.toast("Aula zerada.");
   };
 
@@ -232,11 +256,15 @@
   /* QR */
   $("#b-qr").onclick = () => {
     const url = V.urlIrma("aluno.html");
-    $("#qr").innerHTML = V.qrSVG(url, 8); $("#qr-url").textContent = url;
+    $("#qr").innerHTML = V.qrSVG(url, 8);
+    $("#l-aluno").value = url; $("#l-jogo").value = A.jogo ? V.urlIrma("jogo.html") : "(esta aula não tem jogo)"; $("#l-site").value = new URL("../../", location.href).href;
+    $("#b-qr-tv").textContent = st.qr ? "📺 Tirar QR da TV" : "📺 Mostrar QR na TV";
     const linhas = (A.blocos || []).filter((b) => COD[b.id]).map((b) => "<tr><td>" + V.esc(b.titulo) + "</td><td>" + V.esc(COD[b.id]) + "</td></tr>").join("");
     $("#qr-cods").innerHTML = linhas ? "<p><b>Códigos dos blocos</b> (só para quem estiver sem internet; os outros seguem você ao vivo):</p><table class=\"cods\">" + linhas + (COD.__tudo ? "<tr><td>Libera tudo (revisão)</td><td>" + V.esc(COD.__tudo) + "</td></tr>" : "") + "</table>" : "";
     $("#d-qr").showModal();
   };
+  $("#b-qr-tv").onclick = () => { st.qr = !st.qr; publicar(); $("#b-qr-tv").textContent = st.qr ? "📺 Tirar QR da TV" : "📺 Mostrar QR na TV"; };
+  V.$$("[data-copia]").forEach((b) => (b.onclick = async () => { const i = $("#" + b.dataset.copia); try { await navigator.clipboard.writeText(i.value); V.toast("Link copiado.", "ok"); } catch (e) { i.select(); V.toast("Selecionado: use Ctrl+C."); } }));
 
   /* Firebase: login do professor */
   function pintaFB() {
@@ -295,7 +323,7 @@
   }
 
   pintaFB(); desenhar(); pintaTempo(); publicar();
-})();
+});
 </script>
 </body>
 </html>

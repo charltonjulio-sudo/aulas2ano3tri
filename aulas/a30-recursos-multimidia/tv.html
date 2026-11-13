@@ -11,7 +11,9 @@
   <div class="tv-espera" id="espera"><h1>📺 Aguardando o painel do professor…</h1><p>Abra o painel neste mesmo navegador e clique em “Abrir TV”.<br>Tecla <b>F</b> = tela cheia.</p></div>
   <div class="palco" id="palco" data-base="palco" hidden></div>
 </div>
+<button type="button" class="tv-btn-qr" id="b-qr" title="Mostrar QR para os alunos (tecla Q)">📱 QR</button>
 <script src="../../config.js"></script>
+<script src="../../motor/qrcode.js"></script>
 <script src="../../motor/viva-core.js"></script>
 <script src="../../motor/viva-sync.js"></script>
 <script src="../../motor/viva-planilha.js"></script>
@@ -25,19 +27,35 @@
   const escalar = () => { const k = Math.min(innerWidth / 1600, innerHeight / 900); palco.style.transform = "scale(" + k + ")"; };
   addEventListener("resize", escalar); escalar();
   let ultimo = "";
-  function aplicar(e) {
+  let aplicar = function (e) {
     if (!e || e.aula !== A.id || !A.slides[e.i]) return;
     const s = V.efetivo(A.slides[e.i], e);
-    const chave = e.i + ":" + e.passo + ":" + e.revelado + ":" + e.zq + ":" + (s.tipo === "quadro" ? s.linhas.join("|") : "");
+    const chave = e.i + ":" + e.passo + ":" + e.revelado + ":" + e.zq + ":" + (s.tipo === "quadro" ? s.linhas.join("|") : "") + ":" + JSON.stringify((e.cl || {})[s.id] || {});
     if (chave === ultimo) return; ultimo = chave;
     V.$("#espera").hidden = true; palco.hidden = false;
-    V.render(s, palco, "tv", { passo: e.passo, revelado: e.revelado, zq: e.zq });
+    V.render(s, palco, "tv", { passo: e.passo, revelado: e.revelado, zq: e.zq, cl: e.cl });
     palco.insertAdjacentHTML("beforeend", '<div class="palco-rodape" data-nao-ler>' + (e.i + 1) + " / " + A.slides.length + "</div>");
+  };
+  // QR dos alunos sobre o slide: pelo painel (estado.qr) ou pelo botão/tecla Q na própria TV
+  let qrPainel = false, qrLocal = false;
+  function pintaQR() {
+    let o = V.$("#tv-qr");
+    const ver = qrPainel || qrLocal;
+    if (!ver) { if (o) o.remove(); return; }
+    if (o) return;
+    const url = V.urlIrma("aluno.html");
+    o = document.createElement("div"); o.id = "tv-qr";
+    o.innerHTML = '<div class="qr-caixa">' + V.qrSVG(url, 10) + '</div><div><h2>📱 Acompanhe no celular</h2><p>Aponte a câmera para o código.</p><p class="url">' + V.esc(url) + "</p><p>Sem internet? Siga pelo quadro e pelo caderno.</p></div>";
+    (palco.hidden ? V.$("#env") : palco).appendChild(o);
   }
+  V.$("#b-qr").onclick = () => { qrLocal = !qrLocal; pintaQR(); };
+  const aplicarBase = aplicar;
+  aplicar = function (e) { if (e && e.aula === A.id) { qrPainel = !!e.qr; } aplicarBase(e); const o = V.$("#tv-qr"); if (o) o.remove(); pintaQR(); };
   // ?remoto=1 → TV em outro aparelho (Smart TV, outro PC) segue pelo Firebase
   if (new URLSearchParams(location.search).get("remoto") === "1") V.Sync.ouvirRemoto(aplicar);
   else { V.Sync.ouvirLocal(aplicar); V.Sync.batimentoTV(); }
   document.addEventListener("keydown", (e) => {
+    if (e.key === "q" || e.key === "Q") { qrLocal = !qrLocal; pintaQR(); }
     if (e.key === "f" || e.key === "F") { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); else document.exitFullscreen(); }
   });
 })();
