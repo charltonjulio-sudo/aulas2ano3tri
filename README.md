@@ -21,11 +21,6 @@ O arquivo `aulas.js` mostra só a aula do dia (hoje está a 29). Para trocar, mu
 
 Os códigos também aparecem no painel, no botão 📱 QR. Eles controlam o ritmo da aula; não protegem nada.
 
-## O que ainda falta configurar (uma vez)
-- `config.js` → `firebase`: celulares seguindo o painel ao vivo. Passo a passo em `docs/FIREBASE.md` do kit. Sem isso, os alunos usam os códigos acima.
-- `config.js` → `feedback.url`: rode `criarFeedback()` do `formularios.gs` do kit e cole o link.
-- `config.js` → `jogoSenhaHash`: `node ferramentas/viva.mjs hash "sua frase"`. Libera todas as fases do jogo para você testar.
-
 ## No painel do professor
 - **🔎 Auditoria**: erros do slide original, referências checadas e a % de confiança de cada slide desta aula.
 - Em cada slide: a % de confiança do conteúdo, a base e as fontes, e os erros do slide original correspondente.
