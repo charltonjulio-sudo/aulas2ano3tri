@@ -17,7 +17,9 @@
 
     function tela(html) { gen++; raiz.innerHTML = html; g.scrollTo({ top: 0 }); return gen; }
     const totalEstrelas = () => F.reduce((s, f) => s + ((st.fases[f.id] || {}).primeira || 0), 0);
-    function pintaTopo() { const b = V.$("#estrelas"); if (b) b.textContent = "⭐ " + totalEstrelas() + "/" + F.length * 3; }
+    const Pr = V.Presenca && V.Presenca.ativo() ? V.Presenca : null;
+    const progresso = () => { const feitas = F.filter((f) => (st.fases[f.id] || {}).primeira > 0).length; return "fase " + Math.min(F.length, feitas + (st.atual ? 1 : 0)) + "/" + F.length + " · ⭐ " + totalEstrelas() + "/" + F.length * 3; };
+    function pintaTopo() { const b = V.$("#estrelas"); if (b) b.textContent = "⭐ " + totalEstrelas() + "/" + F.length * 3; if (Pr) Pr.atualizar({ jg: progresso() }); }
 
     /* ---------- identificação ---------- */
     function identificacao() {
@@ -27,12 +29,17 @@
         '<label class="rot" for="j-num">Número da chamada</label><input id="j-num" class="resp-texto" type="number" min="1" max="60" inputmode="numeric">' +
         (turmas.length ? '<label class="rot" for="j-turma">Turma</label><select id="j-turma" class="resp-texto"><option value="">Escolha…</option>' + turmas.map((t) => "<option>" + esc(t) + "</option>").join("") + "</select>" : "") +
         '<p id="j-msg" style="color:var(--vermelho)" aria-live="polite"></p><p><button class="btn" type="button" id="j-ok">Começar ▶</button></p></div>');
+      const id = V.Presenca && V.Presenca.identidade();
+      if (id) { V.$("#j-nome").value = id.nome || ""; if (id.numero) V.$("#j-num").value = id.numero; if (id.turma && V.$("#j-turma")) V.$("#j-turma").value = id.turma; }
       V.$("#j-ok").onclick = () => {
         const nome = V.$("#j-nome").value.trim().replace(/\s+/g, " "), num = +V.$("#j-num").value, tu = turmas.length ? V.$("#j-turma").value : "";
-        if (nome.split(" ").length < 2) return (V.$("#j-msg").textContent = "Escreva nome e sobrenome.");
+        const errNome = V.Presenca ? V.Presenca.validarNome(nome) : nome.split(" ").length < 2 ? "Escreva nome e sobrenome." : "";
+        if (errNome) return (V.$("#j-msg").textContent = errNome);
         if (!(num >= 1 && num <= 60)) return (V.$("#j-msg").textContent = "Coloque seu número da chamada.");
         if (turmas.length && !tu) return (V.$("#j-msg").textContent = "Escolha sua turma.");
-        st.aluno = { nome, numero: num, turma: tu }; salvar(); mapa();
+        st.aluno = { nome, numero: num, turma: tu }; salvar();
+        if (V.Presenca) V.Presenca.definirAluno(st.aluno);
+        mapa();
       };
     }
 
@@ -91,9 +98,22 @@
         V.$("#j-prox").onclick = () => { st.atual.etapa++; salvar(); fase(f); };
         V.$$("button[data-x]", area).forEach((b) => (b.disabled = true));
       };
+      let errosAqui = 0;
       const errado = (dica) => {
-        st.atual.erros++; salvar();
+        st.atual.erros++; salvar(); errosAqui++;
         fb.innerHTML = '<span class="balao" style="display:block">' + V.fraseQuase() + (dica || d.dica ? " " + md(dica || d.dica) : "") + "</span>";
+        // trava contra "chutar até acertar": a partir do 3º erro neste desafio, espera alguns segundos lendo a dica
+        if (errosAqui >= 3 && !st.prof) {
+          let t = Math.min(10, 2 + errosAqui * 1);
+          area.classList.add("j-espera"); area.setAttribute("aria-disabled", "true");
+          const av = document.createElement("span"); av.className = "j-espera-msg"; fb.appendChild(av);
+          const tick = () => {
+            if (meu !== gen) return;
+            if (t <= 0) { area.classList.remove("j-espera"); area.removeAttribute("aria-disabled"); av.remove(); return; }
+            av.textContent = "⏳ Leia a dica com calma. Pode tentar de novo em " + t + " s."; t--; setTimeout(tick, 1000);
+          };
+          tick();
+        }
       };
       const profMarca = (ok) => (st.prof && ok ? " ✔" : "");
       const D = DESAFIOS[d.tipo];
@@ -232,6 +252,10 @@
       };
     }
 
+    if (Pr) {
+      if (st.aluno && !st.prof && !Pr.identidade()) Pr.definirAluno(st.aluno);
+      Pr.iniciar({ pagina: "jogo", extra: () => ({ jg: progresso() }) }).then(() => { const c = Pr.codigo(); if (!c) return; const e = document.createElement("div"); e.className = "cod-flutua"; e.title = "Código deste aparelho"; e.textContent = "📱 " + c; document.body.appendChild(e); });
+    }
     if (!st.aluno) identificacao(); else mapa();
     return { estado: () => st };
   };

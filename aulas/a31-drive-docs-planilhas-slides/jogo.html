@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="color-scheme" content="light dark">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0D47A1">
 <title>Jogo da aula</title>
@@ -15,12 +16,14 @@
   <button type="button" data-a11y="mais" aria-label="Aumentar letra">A+</button>
   <button type="button" data-a11y="ler" aria-label="Ler em voz alta">🔊</button>
   <button type="button" data-a11y="apoio" aria-label="Modo apoio: menos opções e leitura da pergunta" aria-pressed="false">🧩</button>
-  <button type="button" data-a11y="contraste" aria-label="Alto contraste" aria-pressed="false">🌓</button>
+  <button type="button" data-a11y="tema" aria-label="Tema">☀️</button>
   <button type="button" id="j-prof" aria-label="Professor">🔑</button>
 </header>
 <main class="aula" id="jogo" style="padding-bottom:2em"></main>
 <script src="../../config.js"></script>
 <script src="../../motor/viva-core.js"></script>
+<script src="../../motor/viva-sync.js"></script>
+<script src="../../motor/viva-presenca.js"></script>
 <script src="../../motor/viva-planilha.js"></script>
 <script src="../../motor/viva-python.js"></script>
 <script src="../../motor/viva-render.js"></script>

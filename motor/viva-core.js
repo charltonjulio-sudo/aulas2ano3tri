@@ -2,7 +2,7 @@
 (function (g) {
   "use strict";
   const V = (g.Viva = g.Viva || {});
-  V.VERSAO = "1.3.0";
+  V.VERSAO = "1.4.0";
 
   V.store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -64,7 +64,8 @@
   };
 
   /* ---------- Barra de acessibilidade ----------
-     Botões com data-a11y="menos|mais|ler|contraste|mov|apoio" dentro de `raiz`.
+     Botões com data-a11y="menos|mais|ler|tema|mov|apoio" dentro de `raiz`.
+     tema: claro → escuro → alto contraste (começa pelo tema do aparelho).
      `alvoLeitura()` devolve o elemento a ler. `aoMudar(prefs)` avisa a página. */
   V.a11y = {
     prefs: null,
@@ -72,7 +73,12 @@
       const o = opts || {};
       this.alvo = o.alvoLeitura || (() => document.body);
       this.aoMudar = o.aoMudar || (() => {});
-      this.prefs = Object.assign({ escala: 1, contraste: false, semMov: false, apoio: false }, V.store.get("viva:a11y", {}));
+      this.prefs = Object.assign({ escala: 1, semMov: false, apoio: false }, V.store.get("viva:a11y", {}));
+      if (!this.prefs.tema) {
+        const escuro = g.matchMedia && g.matchMedia("(prefers-color-scheme: dark)").matches;
+        this.prefs.tema = this.prefs.contraste ? "contraste" : escuro ? "escuro" : "claro";
+      }
+      delete this.prefs.contraste;
       this.aplicar();
       V.$$("[data-a11y]", o.raiz).forEach((b) => b.addEventListener("click", () => this.acao(b.dataset.a11y, b)));
       if (!V.podeFalar()) V.$$('[data-a11y="ler"]', o.raiz).forEach((b) => (b.hidden = true));
@@ -81,7 +87,10 @@
       const p = this.prefs;
       if (a === "menos") p.escala = Math.max(0.85, +(p.escala - 0.15).toFixed(2));
       if (a === "mais") p.escala = Math.min(1.9, +(p.escala + 0.15).toFixed(2));
-      if (a === "contraste") p.contraste = !p.contraste;
+      if (a === "tema" || a === "contraste") {
+        p.tema = { claro: "escuro", escuro: "contraste", contraste: "claro" }[p.tema] || "claro";
+        V.toast({ claro: "☀️ Tema claro", escuro: "🌙 Tema escuro", contraste: "◐ Alto contraste" }[p.tema]);
+      }
       if (a === "mov") p.semMov = !p.semMov;
       if (a === "apoio") p.apoio = !p.apoio;
       if (a === "ler") {
@@ -97,10 +106,13 @@
     aplicar() {
       const h = document.documentElement, p = this.prefs;
       h.style.setProperty("--escala", p.escala);
-      h.classList.toggle("alto-contraste", !!p.contraste);
+      h.classList.toggle("alto-contraste", p.tema === "contraste");
+      h.classList.toggle("tema-escuro", p.tema === "escuro");
+      h.classList.toggle("hub-claro", p.tema === "claro");
       h.classList.toggle("sem-mov", !!p.semMov);
       h.classList.toggle("modo-apoio", !!p.apoio);
-      V.$$('[data-a11y="contraste"]').forEach((b) => b.setAttribute("aria-pressed", !!p.contraste));
+      const ic = { claro: "☀️", escuro: "🌙", contraste: "◐" }[p.tema], nome = { claro: "claro", escuro: "escuro", contraste: "alto contraste" }[p.tema];
+      V.$$('[data-a11y="tema"], [data-a11y="contraste"]').forEach((b) => { b.textContent = ic; b.setAttribute("aria-label", "Tema: " + nome + ". Toque para trocar"); b.removeAttribute("aria-pressed"); });
       V.$$('[data-a11y="apoio"]').forEach((b) => b.setAttribute("aria-pressed", !!p.apoio));
       V.$$('[data-a11y="mov"]').forEach((b) => b.setAttribute("aria-pressed", !!p.semMov));
     },

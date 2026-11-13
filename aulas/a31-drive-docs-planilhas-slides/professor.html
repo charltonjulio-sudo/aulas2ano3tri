@@ -46,6 +46,11 @@
   .qr-grande { width: min(70vh, 80vw); } .qr-grande svg { width: 100%; height: auto; }
   .url { font: 600 1.1em var(--mono); word-break: break-all; }
   table.cods { border-collapse: collapse; margin-top: .6em; } table.cods td { border: 1px solid var(--borda); padding: .2em .6em; } table.cods td:last-child { font: 700 1.1em var(--mono); }
+  dialog#d-turma { width: min(1100px, 96vw); max-height: 92vh; }
+  table.turma { border-collapse: collapse; width: 100%; font-size: .9em; } table.turma td, table.turma th { border: 1px solid var(--borda); padding: .3em .45em; text-align: left; vertical-align: top; }
+  table.turma th { background: #eef1f6; position: sticky; top: 0; } table.turma tr.fora td { background: #fff3e0; } table.turma tr.sem td { background: #f1f1f4; color: #3d4152; }
+  table.turma .cod { font: 700 1.05em var(--mono); background: #ede9fe; color: #4c1d95; border-radius: 6px; padding: 0 .3em; }
+  .turma-res { display: flex; gap: .5em; flex-wrap: wrap; align-items: center; margin: .4em 0 .7em; } .turma-res b { font-size: 1.15em; }
   @media (max-width: 1000px) { .p-corpo { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; overflow: auto; } #lista { max-height: 22vh; } #notas { border-left: 0; } .p-prev-env { min-height: 40vh; } }
 </style>
 </head>
@@ -54,6 +59,7 @@
   <div class="p-tit"><b id="tit"></b><small id="sub"></small></div>
   <span class="pill" id="st-tv">📺 TV fechada</span>
   <button class="pill" id="st-fb" type="button">☁️ Celulares: desligado</button>
+  <button class="pill" id="st-turma" type="button" hidden>👥 Turma</button>
   <span class="relogio" id="t-aula" title="Tempo restante da aula">00:00</span>
   <button id="b-play" type="button" title="Iniciar/pausar cronômetro">▶</button>
   <span class="relogio peq" id="t-slide" title="Tempo neste slide">00:00</span>
@@ -103,6 +109,7 @@
   <p><button class="btn" type="button" id="q-salvar">Salvar</button> <button class="btn sec" type="button" id="q-orig">Voltar ao original</button> <button class="btn sec" type="button" onclick="this.closest('dialog').close()">Cancelar</button></p>
 </dialog>
 
+<dialog id="d-turma"><div id="turma-corpo"></div></dialog>
 <dialog id="d-login">
   <h2 style="margin-top:0">☁️ Conectar os celulares</h2>
   <div id="login-corpo"></div>
@@ -112,6 +119,7 @@
 <script src="../../motor/qrcode.js"></script>
 <script src="../../motor/viva-core.js"></script>
 <script src="../../motor/viva-sync.js"></script>
+<script src="../../motor/viva-presenca.js"></script>
 <script src="../../motor/viva-planilha.js"></script>
 <script src="../../motor/viva-render.js"></script>
 <script src="aula.js"></script>
@@ -298,11 +306,11 @@ Viva.portaoProfessor(function () {
     else if (a) c.innerHTML = "<p>Conectado como <b>" + V.esc(a.email) + "</b>.</p><p><button class=\"btn sec\" type=\"button\" id=\"b-sair\">Sair</button> <button class=\"btn\" type=\"button\" onclick=\"this.closest('dialog').close()\">Fechar</button></p>";
     else c.innerHTML = '<form id="f-login" method="dialog"><label class="rot">E-mail do professor (Firebase)</label><input id="l-email" type="email" required style="width:100%;padding:.4em" autocomplete="username"><label class="rot">Senha</label><input id="l-senha" type="password" required style="width:100%;padding:.4em" autocomplete="current-password"><p id="l-msg" style="color:var(--vermelho)"></p><p><button class="btn" type="submit">Entrar</button> <button class="btn sec" type="button" onclick="this.closest(\'dialog\').close()">Cancelar</button></p></form>';
     $("#d-login").showModal();
-    const sair = $("#b-sair"); if (sair) sair.onclick = () => { V.Sync.logout(); $("#d-login").close(); pintaFB(); };
+    const sair = $("#b-sair"); if (sair) sair.onclick = () => { V.Sync.logout(); $("#d-login").close(); pintaFB(); if (ouvinte) { ouvinte.fechar(); ouvinte = null; } pintaTurma(); };
     const f = $("#f-login");
     if (f) f.onsubmit = async (e) => {
       e.preventDefault(); $("#l-msg").textContent = "Entrando…";
-      try { await V.Sync.login($("#l-email").value.trim(), $("#l-senha").value); $("#d-login").close(); fbStatus = ""; publicar(); pintaFB(); V.toast("Celulares conectados.", "ok"); }
+      try { await V.Sync.login($("#l-email").value.trim(), $("#l-senha").value); $("#d-login").close(); fbStatus = ""; publicar(); pintaFB(); ligarTurma(); V.toast("Celulares conectados.", "ok"); }
       catch (err) { $("#l-msg").innerHTML = "Não entrou: " + V.esc(explicaLogin(err)); }
     };
   };
@@ -339,7 +347,107 @@ Viva.portaoProfessor(function () {
     };
   }
 
-  pintaFB(); desenhar(); pintaTempo(); publicar();
+  /* ===== presença: quem está com a aula aberta no celular ===== */
+  const CH_SAIDAS = "viva:saidas:" + A.id;
+  let turma = {}, saidas = V.store.get(CH_SAIDAS, {}), ultimoK = {}, ouvinte = null, turmaErro = "", filtroTurma = "", apagar = 0;
+  const RECENTE = 4 * 3600000; // só quem deu sinal nas últimas 4 h
+  const dur = (ms) => (ms < 60000 ? Math.max(1, Math.round(ms / 1000)) + " s" : Math.round(ms / 60000) + " min");
+  const hora = (t) => new Date(t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  let agRef = Date.now(); // um único "agora" por rodada: lista, contador e saídas sempre concordam
+  function situacao(x) {
+    const ag = agRef;
+    if (x.vis === false) {
+      const fora = ag - (x.us || x.vt || ag);
+      if (fora < 4000) return { k: "ok", txt: "🟢 na aula" };
+      if (x.nav && fora < 60000) return { k: "nav", txt: "🔵 trocando de página" };
+      return { k: "fora", txt: "🟠 fora da aula há " + dur(fora) };
+    }
+    const idade = ag - (x.vt || 0);
+    if (idade > V.Presenca.VIDA) return { k: "sem", txt: "⚫ sem sinal há " + dur(idade) };
+    return { k: "ok", txt: "🟢 na aula" };
+  }
+  const nomeDe = (x) => (x.n ? x.n + (x.c ? " (nº " + x.c + ")" : "") : "sem nome · aparelho " + (x.cod || "?"));
+  function listaTurma() {
+    const ag = Date.now();
+    return Object.keys(turma).map((u) => Object.assign({ uid: u }, turma[u])).filter((x) => x.vt && ag - x.vt < RECENTE && (!filtroTurma || x.t === filtroTurma));
+  }
+  function conferirSaidas() {
+    let mudou = false; agRef = Date.now();
+    Object.keys(turma).forEach((u) => {
+      const x = turma[u], k = situacao(x).k, antes = ultimoK[u];
+      if (k === "fora" && antes && antes !== "fora") {
+        (saidas[u] = saidas[u] || []).push({ em: x.us || Date.now() }); mudou = true;
+        V.toast("🟠 " + nomeDe(x) + " saiu da aula");
+      }
+      if (k === "ok" && antes === "fora" && saidas[u] && saidas[u].length) { const s = saidas[u][saidas[u].length - 1]; if (!s.volta) { s.volta = Date.now(); mudou = true; } }
+      ultimoK[u] = k;
+    });
+    if (mudou) V.store.set(CH_SAIDAS, saidas);
+  }
+  function pintaTurma() {
+    const b = $("#st-turma");
+    b.hidden = !V.Sync.temRemoto(); if (b.hidden) return;
+    b.classList.remove("on", "alerta");
+    if (!V.Sync.auth()) { b.textContent = "👥 Turma: entrar"; return; }
+    if (turmaErro) { b.textContent = "👥 Turma: erro"; b.title = turmaErro; b.classList.add("alerta"); return; }
+    const L = listaTurma(), c = { ok: 0, fora: 0, sem: 0, nav: 0 };
+    L.forEach((x) => c[situacao(x).k]++);
+    b.textContent = "👥 " + c.ok + " na aula" + (c.fora ? " · 🟠 " + c.fora + " fora" : "") + (c.sem ? " · ⚫ " + c.sem : "");
+    b.title = L.length + " aparelhos nas últimas 4 h";
+    b.classList.add(c.fora ? "alerta" : "on");
+    if ($("#d-turma").open) corpoTurma();
+  }
+  function linhasChamada() {
+    const L = listaTurma().sort((a, b) => (a.c || 99) - (b.c || 99) || String(a.n || "").localeCompare(String(b.n || "")));
+    return L.map((x) => [x.c || "", x.n || "(sem nome)", x.t || "", situacao(x).txt.replace(/^\S+ /, ""), (saidas[x.uid] || []).length, x.cod || "", x.ap || ""]);
+  }
+  function corpoTurma() {
+    const L = listaTurma(), ordem = { fora: 0, sem: 1, nav: 2, ok: 3 };
+    L.sort((a, b) => ordem[situacao(a).k] - ordem[situacao(b).k] || (a.c || 99) - (b.c || 99));
+    const turmas = [...new Set(Object.values(turma).map((x) => x.t).filter(Boolean))].sort();
+    const c = { ok: 0, fora: 0, sem: 0, nav: 0 }; L.forEach((x) => c[situacao(x).k]++);
+    const semNome = L.filter((x) => !x.n).length;
+    let h = '<h2 style="margin:0">👥 Turma ao vivo — ' + V.esc(A.titulo || "") + "</h2>" +
+      '<div class="turma-res"><b>' + L.length + "</b> aparelhos · 🟢 " + c.ok + " na aula · 🟠 " + c.fora + " fora · ⚫ " + c.sem + " sem sinal" + (semNome ? " · ❔ " + semNome + " sem nome" : "") +
+      (turmas.length > 1 ? ' · <label>Turma <select id="tm-filtro"><option value="">todas</option>' + turmas.map((t) => "<option" + (t === filtroTurma ? " selected" : "") + ">" + V.esc(t) + "</option>").join("") + "</select></label>" : "") + "</div>" +
+      '<p style="margin:.2em 0 .6em;font-size:.85em;color:#3d4152">🟠 <b>fora</b>: trocou de app ou de aba, ou bloqueou o celular. ⚫ <b>sem sinal</b>: celular sem internet ou navegador fechado. O código do aparelho aparece embaixo, na tela do aluno.</p>' +
+      '<div style="max-height:58vh;overflow:auto"><table class="turma"><tr><th>nº</th><th>nome</th><th>turma</th><th>aparelho</th><th>onde</th><th>situação</th><th>saídas</th></tr>' +
+      L.map((x) => {
+        const si = situacao(x), sd = saidas[x.uid] || [];
+        return '<tr class="' + si.k + '"><td>' + V.esc(x.c || "") + "</td><td>" + (x.n ? V.esc(x.n) : "<i>sem nome</i>") + "</td><td>" + V.esc(x.t || "") + '</td><td><span class="cod">' + V.esc(x.cod || "?") + "</span> " + V.esc(x.ap || "") + "</td><td>" +
+          (x.pg === "jogo" ? "🎮 jogo" + (x.jg ? " · " + V.esc(x.jg) : "") : "📖 slides" + (x.sl ? " · slide " + V.esc(x.sl) : "")) + "</td><td>" + si.txt + "</td><td>" +
+          (sd.length ? "<b>" + sd.length + "</b> · " + sd.slice(-3).map((s) => hora(s.em) + (s.volta ? "–" + hora(s.volta) : "")).join(", ") : "0") + "</td></tr>";
+      }).join("") + "</table></div>" +
+      (L.length ? "" : "<p>Nenhum aparelho ainda. Peça para os alunos abrirem o link ou o QR.</p>") +
+      '<p style="display:flex;gap:.5em;flex-wrap:wrap;margin-top:.8em"><button class="btn" type="button" id="tm-copiar">📋 Copiar chamada</button><button class="btn sec" type="button" id="tm-csv">⬇️ Baixar planilha (CSV)</button><button class="btn sec" type="button" id="tm-nova">' + (apagar ? "Clique de novo para apagar a lista" : "🧹 Nova chamada") + '</button><button class="btn sec" type="button" id="tm-fechar">Fechar</button></p>' +
+      '<p style="font-size:.8em;color:#3d4152">Os nomes ficam só no seu Firebase (só a sua conta lê). Use <b>Nova chamada</b> no começo de cada turma: apaga a lista anterior desta aula.</p>';
+    $("#turma-corpo").innerHTML = h;
+    const f = $("#tm-filtro"); if (f) f.onchange = () => { filtroTurma = f.value; corpoTurma(); pintaTurma(); };
+    const cab = ["nº", "nome", "turma", "situação", "saídas", "aparelho", "modelo"];
+    $("#tm-copiar").onclick = () => { const t = [cab].concat(linhasChamada()).map((r) => r.join("\t")).join("\n"); navigator.clipboard.writeText(t).then(() => V.toast("Copiado. Cole na planilha.", "ok"), () => V.toast("Não deu para copiar.")); };
+    $("#tm-csv").onclick = () => {
+      const q = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+      const t = "\ufeff" + [cab].concat(linhasChamada()).map((r) => r.map(q).join(";")).join("\r\n");
+      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([t], { type: "text/csv" })); a.download = "chamada-" + A.id + "-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click();
+    };
+    $("#tm-nova").onclick = async () => {
+      if (!apagar) { apagar = setTimeout(() => { apagar = 0; if ($("#d-turma").open) corpoTurma(); }, 4000); return corpoTurma(); }
+      clearTimeout(apagar); apagar = 0;
+      try { await V.Presenca.novaChamada(); turma = {}; saidas = {}; ultimoK = {}; V.store.set(CH_SAIDAS, saidas); V.toast("Lista zerada.", "ok"); }
+      catch (e) { V.toast("Não apagou: " + e.message); }
+      pintaTurma(); corpoTurma();
+    };
+    $("#tm-fechar").onclick = () => $("#d-turma").close();
+  }
+  function ligarTurma() {
+    if (!V.Sync.temRemoto() || !V.Sync.auth() || ouvinte) return pintaTurma();
+    ouvinte = V.Presenca.ouvirTurma((m) => { turma = m; turmaErro = ""; conferirSaidas(); pintaTurma(); }, (s, msg) => { turmaErro = s === "erro" ? msg : ""; pintaTurma(); });
+    pintaTurma();
+  }
+  $("#st-turma").onclick = () => { if (!V.Sync.auth()) return $("#st-fb").click(); corpoTurma(); $("#d-turma").showModal(); };
+  setInterval(() => { conferirSaidas(); pintaTurma(); }, 5000);
+
+  pintaFB(); desenhar(); pintaTempo(); publicar(); ligarTurma();
 });
 </script>
 </body>

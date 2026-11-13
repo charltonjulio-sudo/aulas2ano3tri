@@ -1,6 +1,6 @@
 # Site Aula Viva — 2º ADM (Informática Empresarial)
 
-Aulas 29, 30 e 31, feitas com o Kit Aula Viva 1.1.0.
+Aulas 29, 30 e 31, feitas com o Kit Aula Viva 1.4.0.
 
 ## Publicar
 1. Crie um repositório no GitHub (sugestão: `aula-viva-2adm`) e suba **todo o conteúdo desta pasta**. Se preferir, pode ser uma subpasta de um repositório que já existe.
@@ -24,3 +24,13 @@ Os códigos também aparecem no painel, no botão 📱 Alunos. Eles controlam o 
 - **🔎 Auditoria**: erros do slide original, referências checadas e a % de confiança de cada slide desta aula.
 - Em cada slide: a % de confiança do conteúdo, a base e as fontes, e os erros do slide original correspondente.
 - No quadro: 🔍−/🔍+ muda o tamanho da letra na TV e ✏️ edita o texto ao vivo (TV e celulares).
+
+## Chamada e "saiu da tela" (👥 no painel)
+Precisa de 2 ajustes no Firebase, uma vez só (passo a passo no `docs/FIREBASE.md` do kit):
+1. Autenticação (Authentication) → Método de login (Sign-in method) → Adicionar novo provedor (Add new provider) → Anônimo (Anonymous) → Ativar → Salvar.
+2. Realtime Database → Regras (Rules): colar as regras novas, com o seu UID nas 3 posições, e Publicar.
+
+Sem isso, a aula funciona igual; só o 👥 fica vazio.
+
+## Tema do celular
+O botão 🌓 no celular alterna claro → escuro → alto contraste. Começa pelo tema do aparelho.

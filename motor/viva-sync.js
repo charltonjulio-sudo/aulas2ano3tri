@@ -16,6 +16,7 @@
       db: c.databaseURL.replace(/\/+$/, ""),
       authURL: c.authURL || "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
       tokenURL: c.tokenURL || "https://securetoken.googleapis.com/v1/token",
+      signUpURL: c.signUpURL || "https://identitytoolkit.googleapis.com/v1/accounts:signUp",
     };
   }
 
@@ -23,6 +24,18 @@
     chaveLocal: () => "viva:estado:" + V.aulaId(),
     chaveTV: () => "viva:hb-tv:" + V.aulaId(),
     temRemoto: () => !!cfgFirebase(),
+    cfg: cfgFirebase,
+    /* troca o refreshToken por um idToken novo (vale para professor e aluno) */
+    async renovar(a) {
+      const c = cfgFirebase();
+      const r = await fetch(c.tokenURL + "?key=" + encodeURIComponent(c.apiKey), {
+        method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(a.refreshToken),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error((j.error && j.error.message) || "sessão expirada");
+      return Object.assign(a, { idToken: j.id_token, refreshToken: j.refresh_token, expira: Date.now() + (+j.expires_in - 60) * 1000 });
+    },
 
     /* ----- local (mesmo navegador) ----- */
     publicarLocal(estado) { V.store.set(this.chaveLocal(), estado); },
@@ -60,13 +73,7 @@
       const c = cfgFirebase(); let a = this.auth();
       if (!c || !a) return null;
       if (Date.now() < a.expira) return a.idToken;
-      const r = await fetch(c.tokenURL + "?key=" + encodeURIComponent(c.apiKey), {
-        method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(a.refreshToken),
-      });
-      const j = await r.json();
-      if (!r.ok) { this.logout(); throw new Error((j.error && j.error.message) || "sessão expirada"); }
-      a = Object.assign(a, { idToken: j.id_token, refreshToken: j.refresh_token, expira: Date.now() + (+j.expires_in - 60) * 1000 });
+      try { a = await this.renovar(a); } catch (e) { this.logout(); throw e; }
       V.store.set("viva:auth", a);
       return a.idToken;
     },
