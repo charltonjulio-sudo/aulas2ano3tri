@@ -161,9 +161,9 @@
   };
 
   // ao vivo
-  V.Sync.ouvirRemoto((e) => {
+  V.Sync.ouvirRemoto((e, fresco) => {
+    if (!fresco || e.aula !== A.id) { prof = null; status("offline"); return; }
     prof = e;
-    if (e.aula !== A.id) { status("offline"); return; }
     modo = "vivo";
     // o que o professor já mostrou fica liberado mesmo se a internet cair depois
     S.slice(0, e.max + 1).forEach((s) => { if (s.bloco && !nav.liberados.includes(s.bloco)) nav.liberados.push(s.bloco); });

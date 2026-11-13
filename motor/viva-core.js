@@ -2,7 +2,7 @@
 (function (g) {
   "use strict";
   const V = (g.Viva = g.Viva || {});
-  V.VERSAO = "1.2.0";
+  V.VERSAO = "1.3.0";
 
   V.store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },

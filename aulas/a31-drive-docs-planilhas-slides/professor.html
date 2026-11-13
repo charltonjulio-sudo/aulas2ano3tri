@@ -154,7 +154,23 @@ Viva.portaoProfessor(function () {
   function publicar() {
     st.max = Math.max(st.max, st.i);
     V.store.set(CH, st);
-    V.Sync.publicar({ aula: A.id, i: st.i, passo: st.passo, revelado: st.revelado, max: st.max, zq: st.zq, qe: st.qe, cl: st.cl, qr: st.qr, ts: Date.now() }, (s, msg) => { fbStatus = s === "ok" ? "" : msg; pintaFB(); });
+    V.Sync.publicar(estadoAtual(), aoFB);
+  }
+  function estadoAtual() { return { aula: A.id, i: st.i, passo: st.passo, revelado: st.revelado, max: st.max, zq: st.zq, qe: st.qe, cl: st.cl, qr: st.qr, ts: Date.now() }; }
+  function aoFB(s, msg) { fbStatus = s === "ok" ? "" : msg; pintaFB(); }
+  V.Sync.batimentoRemoto(estadoAtual, aoFB);
+
+  function explicaLogin(err) {
+    if (err.rede) return "o navegador não conseguiu falar com o Google (" + err.message + "). Causas comuns: bloqueador de anúncios ou extensão de privacidade, proteção rígida do Firefox, rede da escola bloqueando googleapis.com, ou Firebase Authentication desativado. Teste em outra rede (dados do celular) ou em janela sem extensões.";
+    const m = {
+      INVALID_LOGIN_CREDENTIALS: "e-mail ou senha errados.", INVALID_PASSWORD: "senha errada.", EMAIL_NOT_FOUND: "esse e-mail não está cadastrado em Authentication > Users.",
+      INVALID_EMAIL: "o primeiro campo precisa ser o e-mail cadastrado no Firebase.", USER_DISABLED: "esse usuário está desativado no Firebase.",
+      OPERATION_NOT_ALLOWED: "o login por E-mail/senha não está ativado em Authentication > Método de login.", TOO_MANY_ATTEMPTS_TRY_LATER: "muitas tentativas; espere alguns minutos.",
+    };
+    const k = Object.keys(m).find((c) => String(err.codigo || err.message).indexOf(c) === 0);
+    if (k) return m[k];
+    if (/API key|API_KEY/i.test(err.message)) return "a apiKey do config.js está errada ou restrita (" + err.message + ").";
+    return err.message;
   }
 
   function desenhar() {
@@ -287,7 +303,7 @@ Viva.portaoProfessor(function () {
     if (f) f.onsubmit = async (e) => {
       e.preventDefault(); $("#l-msg").textContent = "Entrando…";
       try { await V.Sync.login($("#l-email").value.trim(), $("#l-senha").value); $("#d-login").close(); fbStatus = ""; publicar(); pintaFB(); V.toast("Celulares conectados.", "ok"); }
-      catch (err) { $("#l-msg").textContent = "Não entrou: " + err.message; }
+      catch (err) { $("#l-msg").innerHTML = "Não entrou: " + V.esc(explicaLogin(err)); }
     };
   };
 

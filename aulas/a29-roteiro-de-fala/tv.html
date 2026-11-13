@@ -52,7 +52,7 @@
   const aplicarBase = aplicar;
   aplicar = function (e) { if (e && e.aula === A.id) { qrPainel = !!e.qr; } aplicarBase(e); const o = V.$("#tv-qr"); if (o) o.remove(); pintaQR(); };
   // ?remoto=1 → TV em outro aparelho (Smart TV, outro PC) segue pelo Firebase
-  if (new URLSearchParams(location.search).get("remoto") === "1") V.Sync.ouvirRemoto(aplicar);
+  if (new URLSearchParams(location.search).get("remoto") === "1") V.Sync.ouvirRemoto((e, fresco) => { if (fresco) aplicar(e); });
   else { V.Sync.ouvirLocal(aplicar); V.Sync.batimentoTV(); }
   document.addEventListener("keydown", (e) => {
     if (e.key === "q" || e.key === "Q") { qrLocal = !qrLocal; pintaQR(); }
