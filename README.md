@@ -1,6 +1,6 @@
 # Site Aula Viva — 2º ADM (Informática Empresarial)
 
-Aulas 29, 30 e 31, feitas com o Kit Aula Viva 1.4.0.
+Aulas 29, 30 e 31, feitas com o Kit Aula Viva 1.5.0.
 
 ## Publicar
 1. Crie um repositório no GitHub (sugestão: `aula-viva-2adm`) e suba **todo o conteúdo desta pasta**. Se preferir, pode ser uma subpasta de um repositório que já existe.
@@ -26,11 +26,13 @@ Os códigos também aparecem no painel, no botão 📱 Alunos. Eles controlam o 
 - No quadro: 🔍−/🔍+ muda o tamanho da letra na TV e ✏️ edita o texto ao vivo (TV e celulares).
 
 ## Chamada e "saiu da tela" (👥 no painel)
-Precisa de 2 ajustes no Firebase, uma vez só (passo a passo no `docs/FIREBASE.md` do kit):
-1. Autenticação (Authentication) → Método de login (Sign-in method) → Adicionar novo provedor (Add new provider) → Anônimo (Anonymous) → Ativar → Salvar.
-2. Realtime Database → Regras (Rules): colar as regras novas, com o seu UID nas 3 posições, e Publicar.
+Precisa só das **regras novas** no Firebase (Realtime Database → Regras → colar → trocar o UID nas 3 posições → Publicar). O texto está no `docs/FIREBASE.md` do kit. O aluno não faz login; o login Anônimo não é mais usado.
+No painel, abra 👥 e toque em **🩺 Testar chamada**: ele diz se os celulares conseguem entrar. No celular, o código embaixo com ⚠️ indica que aquele aparelho não entrou.
 
-Sem isso, a aula funciona igual; só o 👥 fica vazio.
+## Ao vivo: celular preso ao professor
+- O celular mostra o slide do painel e não passa à frente. Pode voltar para rever; quando você muda de slide, ou o aluno volta de outro app, ele volta sozinho para o slide atual.
+- Quiz, cartões, práticas e atividades chegam **🔒 trancados**. No painel, **🔓 Liberar atividade** (tecla **L**) destranca; tocar de novo tranca.
+- **⏹ Encerrar aula** solta os celulares para estudo livre (com os códigos dos blocos). Mexer nos slides reabre.
 
 ## Tema do celular
 O botão 🌓 no celular alterna claro → escuro → alto contraste. Começa pelo tema do aparelho.

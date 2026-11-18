@@ -254,7 +254,8 @@
 
     if (Pr) {
       if (st.aluno && !st.prof && !Pr.identidade()) Pr.definirAluno(st.aluno);
-      Pr.iniciar({ pagina: "jogo", extra: () => ({ jg: progresso() }) }).then(() => { const c = Pr.codigo(); if (!c) return; const e = document.createElement("div"); e.className = "cod-flutua"; e.title = "Código deste aparelho"; e.textContent = "📱 " + c; document.body.appendChild(e); });
+      const e = document.createElement("div"); e.className = "cod-flutua"; e.textContent = "📱 " + Pr.codigo(); document.body.appendChild(e);
+      Pr.iniciar({ pagina: "jogo", extra: () => ({ jg: progresso() }), aoMudar: (ok) => { e.textContent = "📱 " + Pr.codigo() + (ok ? "" : " ⚠️"); e.title = ok ? "Código deste aparelho" : "A chamada não registrou este aparelho. Avise o professor."; } });
     }
     if (!st.aluno) identificacao(); else mapa();
     return { estado: () => st };

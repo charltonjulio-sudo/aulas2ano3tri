@@ -59,6 +59,8 @@
     if (s.tipo === "tutorial") return s.passos.length;
     return 0;
   };
+  /* slides em que o aluno mexe no celular: ao vivo, ficam trancados até o professor tocar em "Liberar atividade" */
+  V.temAtividade = (s) => !!s && (["quiz", "cards", "pratica", "atividade", "tutorial"].includes(s.tipo) || s.interativo === true);
   V.temRevelar = (s) => ["quiz", "pratica", "cards", "caso"].includes(s.tipo) && !(s.tipo === "cards" && s.modo === "virar") && !(s.tipo === "caso" && !s.resposta) && !(s.tipo === "pratica" && !s.solucao);
 
   /* ---------- partes comuns ---------- */

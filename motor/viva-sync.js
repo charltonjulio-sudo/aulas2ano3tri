@@ -80,21 +80,30 @@
 
     /* ----- remoto: escrita (professor), com junção de envios próximos ----- */
     _pendente: null, _tm: null,
+    /* Envia em fila: um PUT por vez e sempre o estado mais novo.
+       (Dois PUTs ao mesmo tempo podiam chegar fora de ordem: o celular ia para o slide novo e voltava.) */
     publicarRemoto(estado, aoStatus) {
       if (!cfgFirebase() || !this.auth()) return;
-      this._pendente = estado;
+      this._pendente = estado; this._aoSt = aoStatus;
       clearTimeout(this._tm);
-      this._tm = setTimeout(async () => {
-        const e = this._pendente; this._pendente = null;
+      this._tm = setTimeout(() => this._esvaziar(), 80);
+    },
+    async _esvaziar() {
+      if (this._enviando) return;
+      this._enviando = true;
+      while (this._pendente) {
+        const e = this._pendente, aoSt = this._aoSt; this._pendente = null;
         try {
           const tk = await this.token();
           const corpo = Object.assign({}, e, { ts: { ".sv": "timestamp" } }); // relógio do Firebase
           const r = await fetch(cfgFirebase().db + "/" + CAMINHO + ".json?auth=" + encodeURIComponent(tk), { method: "PUT", body: JSON.stringify(corpo) });
           if (!r.ok) throw new Error("HTTP " + r.status + " " + (await r.text()).slice(0, 120));
-          aoStatus && aoStatus("ok");
-        } catch (err) { aoStatus && aoStatus("erro", err.message); }
-      }, 120);
+          aoSt && aoSt("ok");
+        } catch (err) { aoSt && aoSt("erro", err.message); }
+      }
+      this._enviando = false;
     },
+
     // o painel reenvia o estado a cada 25 s: é o "estou ao vivo" que os celulares conferem
     VIDA: 75000,
     batimentoRemoto(obter, aoStatus) { setInterval(() => { if (this.auth()) this.publicarRemoto(obter(), aoStatus); }, 25000); },
@@ -122,15 +131,19 @@
           let msg; try { msg = JSON.parse(ev.data); } catch (x) { return; }
           if (!msg) return;
           const partes = String(msg.path || "/").split("/").filter(Boolean);
-          if (!partes.length) estado = mesclar ? Object.assign({}, estado || {}, msg.data || {}) : msg.data;
-          else { estado = Object.assign({}, estado || {}); estado[partes[0]] = msg.data; }
+          let novo;
+          if (!partes.length) novo = mesclar ? Object.assign({}, estado || {}, msg.data || {}) : msg.data;
+          else { novo = Object.assign({}, estado || {}); novo[partes[0]] = msg.data; }
+          // nunca volta para um estado mais velho da mesma sessão do painel
+          if (novo && estado && novo.sid && novo.sid === estado.sid && typeof novo.n === "number" && novo.n < estado.n) return;
+          estado = novo;
           clearTimeout(guarda);
           if (estado && typeof estado.ts === "number") {
             const idade = Math.max(0, Date.now() - estado.ts); // relógio do aparelho pode estar um pouco errado
             vivoAte = Date.now() + VIDA - idade;
           } else vivoAte = 0;
           avaliar();
-          if (estado) cb(estado, fresco());
+          cb(estado, fresco());
         };
         es.addEventListener("put", (ev) => aplicar(ev, false));
         es.addEventListener("patch", (ev) => aplicar(ev, true));
@@ -139,8 +152,12 @@
         es.onerror = () => { st(navigator.onLine === false ? "offline" : "conectando"); clearTimeout(guarda); guarda = setTimeout(() => st("offline"), 9000); };
       };
       abrir();
-      g.addEventListener("online", () => { if (es && es.readyState === 2) abrir(); });
-      return { fechar: () => es && es.close() };
+      const reabrir = () => { if (es) es.close(); abrir(); }; // conexão nova = recebe o slide atual na hora
+      g.addEventListener("online", reabrir);
+      // celular voltou de outro app ou da tela bloqueada: reconecta e pega o slide que está sendo transmitido
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reabrir(); });
+      g.addEventListener("pageshow", (e) => { if (e.persisted) reabrir(); });
+      return { fechar: () => es && es.close(), reabrir, estado: () => estado };
     },
   };
   V.Sync = Sync;

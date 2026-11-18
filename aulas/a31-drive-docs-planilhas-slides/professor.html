@@ -66,6 +66,7 @@
   <button id="b-tv" type="button">📺 Abrir TV</button>
   <button id="b-qr" type="button">📱 Alunos: QR e links</button>
   <button id="b-zerar" type="button">🧹 Zerar aula</button>
+  <button id="b-encerrar" type="button" title="Solta os celulares para estudo livre">⏹ Encerrar aula</button>
   <a class="pill" href="../../professor.html" style="text-decoration:none">🏠 Aulas</a>
   <button class="pill" id="b-aud" type="button" hidden>🔎 Auditoria</button>
 </header>
@@ -77,6 +78,7 @@
       <button class="btn sec" id="b-ant" type="button">◀ Anterior</button>
       <span id="pos"></span>
       <button class="btn sec" id="b-rev" type="button">👁 Revelar (R)</button>
+      <button class="btn sec" id="b-lib" type="button" hidden>🔓 Liberar atividade (L)</button>
       <button class="btn" id="b-prox" type="button">Próximo ▶</button>
       <span id="q-ctrl" hidden><button class="btn sec" id="q-menos" type="button" title="Letra do quadro menor">🔍−</button> <button class="btn sec" id="q-mais" type="button" title="Letra do quadro maior">🔍+</button> <button class="btn sec" id="q-edit" type="button">✏️ Editar quadro</button></span>
     </div>
@@ -129,7 +131,8 @@ Viva.portaoProfessor(function () {
   "use strict";
   const V = Viva, A = window.AULA, S = A.slides, COD = window.AULA_CODIGOS || {};
   const CH = "viva:prof:" + A.id;
-  let st = Object.assign({ i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: 1, qe: {}, cl: {}, qr: false }, V.store.get(CH, {}));
+  let st = Object.assign({ i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: 1, qe: {}, cl: {}, qr: false, lib: [], aberta: true }, V.store.get(CH, {}));
+  if (!Array.isArray(st.lib)) st.lib = [];
   st.qr = false;
   const ef = (k) => V.efetivo(S[k], st);
   st.rodando = false;
@@ -164,7 +167,13 @@ Viva.portaoProfessor(function () {
     V.store.set(CH, st);
     V.Sync.publicar(estadoAtual(), aoFB);
   }
-  function estadoAtual() { return { aula: A.id, i: st.i, passo: st.passo, revelado: st.revelado, max: st.max, zq: st.zq, qe: st.qe, cl: st.cl, qr: st.qr, ts: Date.now() }; }
+  // sid + n: o celular nunca aceita um estado mais velho do que o que já mostrou
+  const SID = Math.random().toString(36).slice(2, 10);
+  let nSeq = 0;
+  function estadoAtual() {
+    nSeq = Math.max(nSeq + 1, Date.now());
+    return { aula: A.id, i: st.i, passo: st.passo, revelado: st.revelado, max: st.max, zq: st.zq, qe: st.qe, cl: st.cl, qr: st.qr, lib: st.lib, aberta: st.aberta !== false, sid: SID, n: nSeq, ts: Date.now() };
+  }
   function aoFB(s, msg) { fbStatus = s === "ok" ? "" : msg; pintaFB(); }
   V.Sync.batimentoRemoto(estadoAtual, aoFB);
 
@@ -192,6 +201,12 @@ Viva.portaoProfessor(function () {
     $("#pos").textContent = (st.i + 1) + " / " + S.length + (n ? "  ·  passo " + st.passo + "/" + n : "");
     $("#b-rev").hidden = !V.temRevelar(s);
     $("#b-rev").textContent = st.revelado ? "🙈 Esconder (R)" : "👁 Revelar (R)";
+    const temAt = V.temAtividade(S[st.i]), livre = st.lib.includes(st.i);
+    $("#b-lib").hidden = !temAt;
+    $("#b-lib").textContent = livre ? "🔒 Trancar atividade (L)" : "🔓 Liberar atividade (L)";
+    $("#b-lib").classList.toggle("sec", livre);
+    $("#b-lib").title = livre ? "Os celulares podem responder. Toque para trancar de novo." : "Nos celulares a atividade está trancada até você liberar.";
+    $("#b-encerrar").textContent = st.aberta === false ? "▶ Reabrir aula" : "⏹ Encerrar aula";
     notas(s, n);
   }
 
@@ -243,16 +258,31 @@ Viva.portaoProfessor(function () {
     $("#notas").innerHTML = h || '<p style="color:var(--texto2)">Sem notas para este slide.</p>';
   }
 
-  function ir(i, passo) { st.i = Math.max(0, Math.min(S.length - 1, i)); st.passo = passo; st.revelado = false; st.tSlide = 0; publicar(); desenhar(); }
-  function proximo() { const n = V.passos(ef(st.i)); if (st.passo < n) { st.passo++; publicar(); desenhar(); } else if (st.i < S.length - 1) ir(st.i + 1, 0); }
+  function reabrir() { if (st.aberta === false) { st.aberta = true; V.toast("Aula reaberta: os celulares voltam a seguir você."); } }
+  function ir(i, passo) { reabrir(); st.i = Math.max(0, Math.min(S.length - 1, i)); st.passo = passo; st.revelado = false; st.tSlide = 0; publicar(); desenhar(); }
+  function proximo() { reabrir(); const n = V.passos(ef(st.i)); if (st.passo < n) { st.passo++; publicar(); desenhar(); } else if (st.i < S.length - 1) ir(st.i + 1, 0); }
   function anterior() { if (st.passo > 0) { st.passo--; publicar(); desenhar(); } else if (st.i > 0) ir(st.i - 1, V.passos(ef(st.i - 1))); }
   function revelar() { if (!V.temRevelar(S[st.i])) return; st.revelado = !st.revelado; publicar(); desenhar(); }
-  $("#b-prox").onclick = proximo; $("#b-ant").onclick = anterior; $("#b-rev").onclick = revelar;
+  function liberar() {
+    if (!V.temAtividade(S[st.i])) return;
+    reabrir();
+    st.lib = st.lib.includes(st.i) ? st.lib.filter((x) => x !== st.i) : st.lib.concat([st.i]);
+    publicar(); desenhar();
+    V.toast(st.lib.includes(st.i) ? "🔓 Atividade liberada nos celulares." : "🔒 Atividade trancada nos celulares.", "ok");
+  }
+  $("#b-prox").onclick = proximo; $("#b-ant").onclick = anterior; $("#b-rev").onclick = revelar; $("#b-lib").onclick = liberar;
+  let eConf = 0;
+  $("#b-encerrar").onclick = () => {
+    if (st.aberta === false) { st.aberta = true; publicar(); desenhar(); V.toast("Aula reaberta."); return; }
+    if (Date.now() - eConf > 3000) { eConf = Date.now(); $("#b-encerrar").textContent = "Confirmar encerrar?"; setTimeout(() => desenhar(), 3000); return; }
+    st.aberta = false; publicar(); desenhar(); V.toast("Aula encerrada: os celulares ficam livres para estudar.");
+  };
   document.addEventListener("keydown", (e) => {
     if (e.target.closest("input,textarea,dialog")) return;
     if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); proximo(); }
     if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); anterior(); }
     if (e.key === "r" || e.key === "R") revelar();
+    if (e.key === "l" || e.key === "L") liberar();
   });
 
   /* cronômetros */
@@ -270,7 +300,7 @@ Viva.portaoProfessor(function () {
   let zConf = 0;
   $("#b-zerar").onclick = () => {
     if (Date.now() - zConf > 3000) { zConf = Date.now(); $("#b-zerar").textContent = "Confirmar zerar?"; setTimeout(() => ($("#b-zerar").textContent = "🧹 Zerar aula"), 3000); return; }
-    st = { i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: st.zq, qe: st.qe, cl: {}, qr: false };
+    st = { i: 0, passo: 0, revelado: false, max: 0, restante: (A.duracao_min || 50) * 60, rodando: false, tSlide: 0, zq: st.zq, qe: st.qe, cl: {}, qr: false, lib: [], aberta: true };
     $("#b-zerar").textContent = "🧹 Zerar aula"; publicar(); desenhar(); pintaTempo(); V.toast("Aula zerada.");
   };
 
@@ -349,7 +379,12 @@ Viva.portaoProfessor(function () {
 
   /* ===== presença: quem está com a aula aberta no celular ===== */
   const CH_SAIDAS = "viva:saidas:" + A.id;
-  let turma = {}, saidas = V.store.get(CH_SAIDAS, {}), ultimoK = {}, ouvinte = null, turmaErro = "", filtroTurma = "", apagar = 0;
+  let turma = {}, saidas = V.store.get(CH_SAIDAS, {}), ultimoK = {}, ouvinte = null, turmaErro = "", filtroTurma = "", apagar = 0, diag = null, testando = false;
+  async function diagnosticar() {
+    if (testando) return; testando = true; diag = { ok: null, msg: "Testando…" }; if ($("#d-turma").open) corpoTurma();
+    try { diag = await V.Presenca.testar(); } catch (e) { diag = { ok: false, msg: "Não deu para testar: " + e.message }; }
+    testando = false; if ($("#d-turma").open) corpoTurma();
+  }
   const RECENTE = 4 * 3600000; // só quem deu sinal nas últimas 4 h
   const dur = (ms) => (ms < 60000 ? Math.max(1, Math.round(ms / 1000)) + " s" : Math.round(ms / 60000) + " min");
   const hora = (t) => new Date(t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -419,7 +454,8 @@ Viva.portaoProfessor(function () {
           (sd.length ? "<b>" + sd.length + "</b> · " + sd.slice(-3).map((s) => hora(s.em) + (s.volta ? "–" + hora(s.volta) : "")).join(", ") : "0") + "</td></tr>";
       }).join("") + "</table></div>" +
       (L.length ? "" : "<p>Nenhum aparelho ainda. Peça para os alunos abrirem o link ou o QR.</p>") +
-      '<p style="display:flex;gap:.5em;flex-wrap:wrap;margin-top:.8em"><button class="btn" type="button" id="tm-copiar">📋 Copiar chamada</button><button class="btn sec" type="button" id="tm-csv">⬇️ Baixar planilha (CSV)</button><button class="btn sec" type="button" id="tm-nova">' + (apagar ? "Clique de novo para apagar a lista" : "🧹 Nova chamada") + '</button><button class="btn sec" type="button" id="tm-fechar">Fechar</button></p>' +
+      (diag ? '<p style="font-weight:700;color:' + (diag.ok ? "#1b5e20" : diag.ok === false ? "#8e1b1b" : "#3d4152") + '">🩺 ' + V.esc(diag.msg) + "</p>" : "") +
+      '<p style="display:flex;gap:.5em;flex-wrap:wrap;margin-top:.8em"><button class="btn" type="button" id="tm-copiar">📋 Copiar chamada</button><button class="btn sec" type="button" id="tm-csv">⬇️ Baixar planilha (CSV)</button><button class="btn sec" type="button" id="tm-nova">' + (apagar ? "Clique de novo para apagar a lista" : "🧹 Nova chamada") + '</button><button class="btn sec" type="button" id="tm-teste">🩺 Testar chamada</button><button class="btn sec" type="button" id="tm-fechar">Fechar</button></p>' +
       '<p style="font-size:.8em;color:#3d4152">Os nomes ficam só no seu Firebase (só a sua conta lê). Use <b>Nova chamada</b> no começo de cada turma: apaga a lista anterior desta aula.</p>';
     $("#turma-corpo").innerHTML = h;
     const f = $("#tm-filtro"); if (f) f.onchange = () => { filtroTurma = f.value; corpoTurma(); pintaTurma(); };
@@ -438,13 +474,14 @@ Viva.portaoProfessor(function () {
       pintaTurma(); corpoTurma();
     };
     $("#tm-fechar").onclick = () => $("#d-turma").close();
+    $("#tm-teste").onclick = diagnosticar;
   }
   function ligarTurma() {
     if (!V.Sync.temRemoto() || !V.Sync.auth() || ouvinte) return pintaTurma();
     ouvinte = V.Presenca.ouvirTurma((m) => { turma = m; turmaErro = ""; conferirSaidas(); pintaTurma(); }, (s, msg) => { turmaErro = s === "erro" ? msg : ""; pintaTurma(); });
     pintaTurma();
   }
-  $("#st-turma").onclick = () => { if (!V.Sync.auth()) return $("#st-fb").click(); corpoTurma(); $("#d-turma").showModal(); };
+  $("#st-turma").onclick = () => { if (!V.Sync.auth()) return $("#st-fb").click(); corpoTurma(); $("#d-turma").showModal(); if (!diag && !listaTurma().length) diagnosticar(); };
   setInterval(() => { conferirSaidas(); pintaTurma(); }, 5000);
 
   pintaFB(); desenhar(); pintaTempo(); publicar(); ligarTurma();

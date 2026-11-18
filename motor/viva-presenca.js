@@ -1,7 +1,8 @@
 /* Kit Aula Viva — presença (chamada) e "saiu da tela".
-   Só funciona com Firebase configurado e o login "Anônimo" ativado (docs/FIREBASE.md).
-   Celular: cria uma conta anônima (sem e-mail) e grava SÓ no próprio nó:
-     presenca/<aula>/<uid> = { n, c, t, cod, ap, pg, vis, nav, vt, us, sl, jg }
+   Só precisa do Firebase configurado e das regras com "presenca" (docs/FIREBASE.md). Não usa login do aluno.
+   Cada aparelho sorteia um id e uma chave secreta (guardados no próprio celular) e grava SÓ no próprio item:
+     presenca/<aula>/<id> = { k, n, c, t, cod, ap, pg, vis, nav, vt, us, sl, jg }
+       k chave secreta: as regras só aceitam gravar por cima quem manda a mesma chave (ninguém lê a lista, então ninguém sabe a chave do outro)
        n nome · c nº da chamada · t turma · cod código do aparelho · ap modelo/sistema/navegador
        pg página (slides|jogo) · vis tela visível · nav saiu clicando num link do site
        vt último sinal (relógio do Firebase) · us hora em que a tela saiu · sl slide · jg progresso do jogo
@@ -10,7 +11,8 @@
 (function (g) {
   "use strict";
   const V = g.Viva;
-  const CH_CONTA = "viva:anon", CH_ID = "viva:aluno-id", CH_NAV = "viva:nav-int";
+  const CH_APAR = "viva:aparelho", CH_ID = "viva:aluno-id", CH_NAV = "viva:nav-int";
+  const sorteio = (n) => { const a = new Uint8Array(n); (g.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => (a[i] = Math.random() * 256)); return [...a].map((x) => "abcdefghijkmnpqrstuvwxyz23456789"[x % 32]).join(""); };
   const SV = { ".sv": "timestamp" };
   const ALFA = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
@@ -39,28 +41,15 @@
       return id;
     },
 
-    /* ----- conta anônima do aparelho ----- */
-    async conta() {
-      const c = V.Sync.cfg(); if (!c) return null;
-      let a = V.store.get(CH_CONTA, null);
-      if (a && a.db !== c.db) a = null; // outro projeto
-      if (!a) {
-        const r = await fetch(c.signUpURL + "?key=" + encodeURIComponent(c.apiKey), {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ returnSecureToken: true }),
-        });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error((j.error && j.error.message) || "HTTP " + r.status);
-        a = { uid: j.localId, idToken: j.idToken, refreshToken: j.refreshToken, expira: Date.now() + (+j.expiresIn - 60) * 1000, db: c.db };
-        V.store.set(CH_CONTA, a);
-      } else if (Date.now() >= a.expira) {
-        try { a = await V.Sync.renovar(a); } catch (e) { V.store.del(CH_CONTA); return this.conta(); }
-        V.store.set(CH_CONTA, a);
-      }
+    /* ----- identidade do aparelho (sem login) ----- */
+    conta() {
+      let a = V.store.get(CH_APAR, null);
+      if (!a || !a.id || !a.k) { a = { id: sorteio(16), k: sorteio(24) }; V.store.set(CH_APAR, a); }
       return a;
     },
     codigo() {
-      const a = V.store.get(CH_CONTA, null); if (!a) return "";
-      let h = 2166136261; for (const ch of a.uid) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+      const a = this.conta();
+      let h = 2166136261; for (const ch of a.id) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
       let s = ""; for (let i = 0; i < 4; i++) { h = Math.imul(h ^ (h >>> 13), 2654435761) >>> 0; s += ALFA[h % ALFA.length]; }
       return s;
     },
@@ -92,28 +81,35 @@
       return [modelo, so, nav].filter(Boolean).join(" · ").slice(0, 80);
     },
 
-    /* ----- envio (PATCH só no próprio nó) ----- */
-    async enviar(campos, manterVivo) {
-      if (!this._caminho) return;
-      try {
-        const a = await this.conta();
-        await fetch(this._db + "/" + this._caminho + ".json?auth=" + encodeURIComponent(a.idToken), {
-          method: "PATCH", body: JSON.stringify(Object.assign({ vt: SV }, campos)), keepalive: !!manterVivo,
-        });
-      } catch (x) { /* sem internet: tenta de novo na próxima batida */ }
+    /* ----- envio: PUT do item inteiro (com a chave), em fila ----- */
+    enviar(campos, manterVivo) {
+      if (!this._caminho) return Promise.resolve();
+      const chave = "viva:pres-no:" + V.aulaId();
+      const no = Object.assign({}, V.store.get(chave, {}), campos, { k: this.conta().k });
+      V.store.set(chave, no); // aluno e jogo no mesmo celular compartilham o item
+      const corpo = JSON.stringify(Object.assign({}, no, { vt: SV }));
+      const url = this._db + "/" + this._caminho + ".json";
+      if (manterVivo) { try { fetch(url, { method: "PUT", body: corpo, keepalive: true }); } catch (x) {} return Promise.resolve(); }
+      this._fila = (this._fila || Promise.resolve()).then(async () => {
+        try {
+          const r = await fetch(url, { method: "PUT", body: corpo });
+          this.ok = r.ok; this.erro = r.ok ? "" : "HTTP " + r.status;
+        } catch (x) { this.ok = false; this.erro = x.message; }
+        this.aoMudar && this.aoMudar(this.ok, this.erro);
+      });
+      return this._fila;
     },
 
     /* Liga a presença numa página. o = { pagina: "slides"|"jogo", extra: () => ({...}) } */
     async iniciar(o) {
       if (!this.ativo() || this._caminho) return;
-      const c = V.Sync.cfg();
-      let a;
-      try { a = await this.conta(); } catch (e) { this.erro = e.message; return; }
-      this._db = c.db; this._caminho = "presenca/" + V.aulaId() + "/" + a.uid;
+      const c = V.Sync.cfg(), a = this.conta();
+      this._db = c.db; this._caminho = "presenca/" + V.aulaId() + "/" + a.id;
+      this.aoMudar = o.aoMudar;
       const extra = o.extra || (() => ({}));
       const id = this.identidade() || {};
       const visivel = () => document.visibilityState !== "hidden";
-      this.enviar(Object.assign({ cod: this.codigo(), ap: await this.aparelho(), pg: o.pagina, vis: visivel(), nav: false }, id.nome ? { n: id.nome, c: id.numero, t: id.turma } : {}, extra()));
+      await this.enviar(Object.assign({ cod: this.codigo(), ap: await this.aparelho(), pg: o.pagina, vis: visivel(), nav: false }, id.nome ? { n: id.nome, c: id.numero, t: id.turma } : {}, extra()));
       setInterval(() => { if (visivel()) this.enviar(Object.assign({ vis: true, nav: false, pg: o.pagina }, extra())); }, this.BATIDA);
       // clique num link do próprio site não conta como "saiu"
       document.addEventListener("click", (e) => {
@@ -191,6 +187,16 @@
       };
       abrir();
       return { fechar() { fechado = true; es && es.close(); clearTimeout(reabrir); }, mapa: () => mapa };
+    },
+    /* Painel: confere se um celular consegue gravar na chamada (regras publicadas?) */
+    async testar() {
+      const c = V.Sync.cfg(), id = "teste-" + sorteio(6), url = c.db + "/presenca/" + encodeURIComponent(V.aulaId()) + "/" + id + ".json";
+      const r = await fetch(url, { method: "PUT", body: JSON.stringify({ k: sorteio(24), vt: SV, pg: "teste" }) });
+      const r2 = await fetch(url, { method: "PUT", body: JSON.stringify({ k: sorteio(24), vt: SV, pg: "intruso" }) }); // outra chave: tem de ser recusado
+      try { const tk = await V.Sync.token(); await fetch(url + "?auth=" + encodeURIComponent(tk), { method: "DELETE" }); } catch (x) {}
+      if (!r.ok) return { ok: false, msg: "Os celulares NÃO conseguem gravar a chamada (HTTP " + r.status + "). Publique as regras novas do docs/FIREBASE.md (parte \"presenca\")." };
+      if (r2.ok) return { ok: false, msg: "As regras deixam um celular gravar por cima do outro. Publique as regras novas do docs/FIREBASE.md." };
+      return { ok: true, msg: "Regras certas: os celulares conseguem entrar na chamada." };
     },
     async novaChamada() {
       const c = V.Sync.cfg(), tk = await V.Sync.token();

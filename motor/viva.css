@@ -305,3 +305,8 @@ html.tema-escuro body.aluno select.resp-texto { background: var(--sup); color: v
 html.alto-contraste body.aluno .slide { --texto2: #e8e8e8; }
 html.alto-contraste body.aluno .chamada-caixa { background: #000; color: #fff; border-color: #fff; }
 html.alto-contraste body.aluno .slide a { color: #ffe082; }
+
+/* atividade trancada ao vivo */
+.aviso-ativ { margin: 0 0 .6em; padding: .6em .8em; border-radius: 12px; background: #3a2d0a; color: #ffe8a8; border: 2px dashed var(--ouro); font-weight: 700; text-align: center; }
+.slide.ativ-trancada { opacity: .72; filter: saturate(.6); }
+.status.ao-vivo.fraco { background: #ffe0b2; color: #3e2100; }

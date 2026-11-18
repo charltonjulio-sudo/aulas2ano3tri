@@ -42,7 +42,12 @@
   const CH = "viva:aluno-nav:" + A.id;
   const $ = V.$, el = $("#slide");
   let nav = Object.assign({ i: 0, liberados: [] }, V.store.get(CH, {}));
-  let prof = null, modo = "solo", seguindo = true, trava = null, tocando = 0;
+  /* modo: "espera" (conectando) | "aula" (preso ao slide do professor) | "estudo" (livre, com os códigos dos blocos)
+     Na aula: não passa do slide do professor, pode rever os anteriores e volta sozinho quando o professor muda.
+     Atividades (quiz, cartões, práticas) ficam trancadas até o professor tocar em "Liberar atividade". */
+  const AULA_VIVA_MS = 20 * 60000; // sem sinal do painel por 20 min = aula acabou
+  let prof = null, modo = V.Sync.temRemoto() ? "espera" : "estudo", sinal = "", seguindo = true, trava = null, tocando = 0;
+  const aulaAberta = (e) => !!e && e.aula === A.id && e.aberta !== false && typeof e.ts === "number" && Date.now() - e.ts < AULA_VIVA_MS;
   const blocos = (A.blocos || []).map((b) => b.id);
 
   $("#tit").textContent = A.titulo; document.title = A.titulo;
@@ -53,29 +58,49 @@
   const salvar = () => V.store.set(CH, nav);
   const liberado = (b) => !b || !HASH[b] || nav.liberados.includes(b) || nav.liberados.includes("__tudo") || b === blocos[0];
   function limite() {
-    if (modo === "vivo" && prof) return prof.max;
+    if (modo === "aula" && prof) return prof.i;
+    if (modo === "espera") return nav.i;
     let k = 0; while (k < S.length - 1 && liberado(S[k + 1].bloco)) k++;
     return k;
   }
 
   function status(s) {
+    if (s) sinal = s;
     const p = $("#status");
-    if (s === "ao-vivo" && prof && prof.aula === A.id) { modo = "vivo"; p.textContent = "🟢 Ao vivo"; p.className = "status ao-vivo"; }
-    else if (s === "conectando") { p.textContent = "⏳ Conectando"; p.className = "status"; }
-    else { modo = "solo"; p.textContent = "🟡 Sozinho"; p.className = "status offline"; }
+    if (modo === "aula") {
+      if (sinal === "ao-vivo") { p.textContent = "🟢 Ao vivo"; p.className = "status ao-vivo"; }
+      else if (sinal === "parado") { p.textContent = "🟠 Ao vivo · sinal fraco"; p.className = "status ao-vivo fraco"; }
+      else { p.textContent = "📡 Reconectando"; p.className = "status"; }
+    } else if (modo === "espera") { p.textContent = "⏳ Conectando"; p.className = "status"; }
+    else { p.textContent = "🟡 Estudo livre"; p.className = "status offline"; }
     barra(); botoes();
   }
 
   function barra() {
     const b = $("#barra");
-    if (modo === "vivo" && !seguindo && prof) b.innerHTML = '<div class="aviso-barra">👀 Você está revendo.<button class="btn" type="button" id="b-seguir">Voltar para onde o professor está ▶</button></div>';
-    else if (prof && prof.aula !== A.id) b.innerHTML = '<div class="aviso-barra">ℹ️ O professor está em outra aula agora. Você pode rever esta sozinho.</div>';
+    if (modo === "aula" && !seguindo && prof) b.innerHTML = '<div class="aviso-barra">👀 Você está revendo.<button class="btn" type="button" id="b-seguir">Voltar para a aula ▶</button></div>';
+    else if (modo === "espera") b.innerHTML = '<div class="aviso-barra">⏳ Entrando na aula do professor…</div>';
+    else if (prof && prof.aula && prof.aula !== A.id && prof.aberta !== false) b.innerHTML = '<div class="aviso-barra">ℹ️ O professor está em outra aula agora. Você pode rever esta sozinho.</div>';
     else b.innerHTML = "";
-    const bs = $("#b-seguir"); if (bs) bs.onclick = () => { seguindo = true; nav.i = prof.i; salvar(); desenhar(); barra(); };
+    const bs = $("#b-seguir"); if (bs) bs.onclick = seguir;
+  }
+  function seguir() { if (!prof) return; seguindo = true; nav.i = prof.i; trava = null; salvar(); desenhar(); barra(); }
+
+  /* tranca as atividades (sem redesenhar: não apaga o que o aluno já fez) */
+  function aplicarTrava() {
+    const s = S[nav.i];
+    const fechada = modo === "aula" && V.temAtividade(s) && !((prof && prof.lib) || []).includes(nav.i);
+    el.inert = fechada || modo === "espera";
+    el.classList.toggle("ativ-trancada", fechada);
+    let av = $("#aviso-ativ");
+    if (fechada && !av) { av = document.createElement("div"); av.id = "aviso-ativ"; av.className = "aviso-ativ"; av.setAttribute("role", "status"); av.textContent = "🔒 Atividade trancada. Espere o professor liberar."; el.parentNode.insertBefore(av, el); }
+    if (!fechada && av) { av.remove(); if (el.classList.contains("foi-trancada")) V.toast("🔓 Atividade liberada!", "ok"); }
+    el.classList.toggle("foi-trancada", fechada);
   }
 
   function botoes() {
-    $("#b-ant").disabled = nav.i === 0 && !trava;
+    $("#b-ant").disabled = (nav.i === 0 && !trava) || modo === "espera";
+    $("#b-prox").disabled = modo === "espera" || (modo === "aula" && prof && nav.i >= prof.i);
     $("#pos").textContent = trava ? "🔒" : nav.i + 1 + " / " + S.length;
   }
 
@@ -83,8 +108,8 @@
     tocando++;
     const ex = $("#extra"); ex.innerHTML = "";
     if (trava) return desenharTrava();
-    const s = V.efetivo(S[nav.i], modo === "vivo" ? prof : null);
-    const aoVivoAqui = modo === "vivo" && seguindo && prof && prof.i === nav.i;
+    const s = V.efetivo(S[nav.i], modo === "aula" ? prof : null);
+    const aoVivoAqui = modo === "aula" && seguindo && prof && prof.i === nav.i;
     const passo = aoVivoAqui ? prof.passo : V.passos(s);
     if (!aoVivoAqui) el._prev = null;
     V.render(s, el, "aluno", { passo, revelado: false });
@@ -93,6 +118,7 @@
       $("#b-tocar").onclick = () => tocar(s);
     }
     if (nav.i === S.length - 1) fimDeAula(ex);
+    aplicarTrava();
     botoes();
     window.scrollTo({ top: 0 });
   }
@@ -146,40 +172,69 @@
   $("#b-prox").onclick = () => {
     if (trava) return;
     if (nav.i >= S.length - 1) { V.toast("Você chegou ao fim. 🏁"); return; }
+    if (modo === "espera") return;
     if (nav.i + 1 > limite()) {
-      if (modo === "vivo") { V.toast("Espere o professor chegar lá. 🙂"); return; }
+      if (modo === "aula") { V.toast("Espere o professor passar o slide. 🙂"); return; }
       trava = S[nav.i + 1].bloco; desenhar(); return;
     }
     nav.i++; salvar();
-    if (modo === "vivo" && prof && nav.i === prof.i) seguindo = true;
+    if (modo === "aula" && prof && nav.i === prof.i) seguindo = true;
     desenhar(); barra();
   };
   $("#b-ant").onclick = () => {
     if (trava) { trava = null; desenhar(); return; }
-    if (nav.i === 0) return;
+    if (nav.i === 0 || modo === "espera") return;
     nav.i--; salvar();
-    if (modo === "vivo") seguindo = false;
+    if (modo === "aula") seguindo = false;
     desenhar(); barra();
   };
 
   // ao vivo
-  V.Sync.ouvirRemoto((e, fresco) => {
-    if (!fresco || e.aula !== A.id) { prof = null; status("offline"); return; }
-    prof = e;
-    modo = "vivo";
-    // o que o professor já mostrou fica liberado mesmo se a internet cair depois
+  let ultimo = null;
+  function entrarNaAula(e) {
+    const antes = prof, eraAula = modo === "aula";
+    prof = e; modo = "aula";
+    // o que o professor já mostrou fica liberado para estudar depois
     S.slice(0, e.max + 1).forEach((s) => { if (s.bloco && !nav.liberados.includes(s.bloco)) nav.liberados.push(s.bloco); });
-    if (seguindo) { const mudou = nav.i !== e.i; nav.i = e.i; trava = null; salvar(); if (mudou || ["demo", "quadro", "tutorial"].includes(S[e.i].tipo) || S[e.i].revelar_itens) desenhar(); }
-    status("ao-vivo");
-  }, status);
+    const mudouSlide = !antes || antes.i !== e.i || antes.passo !== e.passo;
+    if (!eraAula || mudouSlide) seguindo = true;           // professor mexeu: todo mundo volta para o slide dele
+    if (!seguindo && nav.i > e.i) seguindo = true;         // nunca à frente do professor
+    if (seguindo) {
+      const precisa = !eraAula || nav.i !== e.i || antes.passo !== e.passo || JSON.stringify(antes.qe || {}) !== JSON.stringify(e.qe || {}) || trava;
+      nav.i = e.i; trava = null; salvar();
+      if (precisa) desenhar(); else aplicarTrava();
+    } else aplicarTrava();
+  }
+  function sairDaAula() {
+    if (modo === "estudo") return;
+    const eraAula = modo === "aula";
+    modo = "estudo"; prof = null; seguindo = true;
+    if (eraAula) V.toast("A aula ao vivo terminou. Agora você pode estudar no seu ritmo.");
+    desenhar();
+  }
+  const conexao = V.Sync.ouvirRemoto((e) => {
+    ultimo = e;
+    if (aulaAberta(e)) entrarNaAula(e);
+    else { if (e && e.aula !== A.id) prof = e; sairDaAula(); }
+    status();
+  }, (st) => {
+    if (st === "ao-vivo-vazio") { sairDaAula(); }
+    else if (st === "offline" && modo === "espera") { sairDaAula(); }   // não conectou: estuda com os códigos
+    status(st);
+  });
+  // voltou de outro app/aba: vai direto para o slide que o professor está transmitindo
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && modo === "aula" && prof && !seguindo) seguir(); });
+  // a aula some sozinha se o painel ficar 20 min sem dar sinal
+  setInterval(() => { if (modo === "aula" && !aulaAberta(ultimo)) { sairDaAula(); status(); } }, 30000);
   if (!V.Sync.temRemoto()) status("offline");
 
-  desenhar(); barra();
+  desenhar(); status();
 
   // presença (chamada) — só com Firebase e login anônimo ativado
   const Pr = V.Presenca;
   if (Pr.ativo()) {
-    Pr.iniciar({ pagina: "slides", extra: () => ({ sl: nav.i + 1 }) }).then(() => { const c = Pr.codigo(); if (c) $("#cod-ap").textContent = "📱 " + c; });
+    const pintaCod = (ok) => { const e = $("#cod-ap"); e.textContent = "📱 " + Pr.codigo() + (ok ? "" : " ⚠️"); e.title = ok ? "Código deste aparelho. Você está na chamada." : "A chamada não registrou este aparelho (" + (Pr.erro || "sem internet") + "). Avise o professor."; };
+    Pr.iniciar({ pagina: "slides", extra: () => ({ sl: nav.i + 1 }), aoMudar: pintaCod });
     if (!Pr.identidade() && !sessionStorage.getItem("viva:pulou-chamada")) Pr.pedirNome({ turmas: A.turmas || (window.VIVA_CONFIG && VIVA_CONFIG.turmas) || [], podePular: true });
   }
 })();
