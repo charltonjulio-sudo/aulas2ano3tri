@@ -62,14 +62,14 @@ window.AULA = {
 
     { id: "s04", bloco: "b2", tipo: "cards", modo: "virar", titulo: "As 3 partes de uma boa fala",
       cartas: [
-        { frente: "1. Introdução", verso: "Diga o **tema** e o **objetivo**. Ex.: \"Quero propor…\"" },
-        { frente: "2. Desenvolvimento", verso: "Dê **2 argumentos** ou exemplos que provam sua ideia." },
-        { frente: "3. Conclusão", verso: "Retome a ideia e diga o **próximo passo**." },
+        { frente: "1. Introdução", verso: "Diga o **tema**, o **problema** e o **objetivo**. Ex.: \"Quero propor…\"" },
+        { frente: "2. Desenvolvimento", verso: "Explique a proposta com **dados, exemplos ou argumentos**." },
+        { frente: "3. Conclusão", verso: "Retome a **mensagem principal** e diga a **recomendação** ou o **próximo passo**." },
       ],
       apoio: { emoji: "🧩", texto: "Começo, meio e fim." },
       glossario: [{ termo: "Argumento", emoji: "💪", explica: "Motivo que ajuda a convencer." }, { termo: "Objetivo", emoji: "🎯", explica: "O que você quer que aconteça." }],
       prof: { falar: "Vire uma carta por vez e peça um exemplo da turma para cada parte.", refs: [{ titulo: "Drucker: comunicação é percepção (resumo do cap. Managerial Communications)", url: "https://www.westsidetoastmasters.com/resources/communication_secrets/lib0049.html" }], tempo_min: 4 },
-      checagem: { conf: 92, base: "Estrutura introdução–desenvolvimento–conclusão é padrão de oratória e redação; é a mesma do slide 12 do original. Drucker só nas notas, como paráfrase.", fontes: [{ titulo: "Drucker, Management (1973), cap. Managerial Communications — resumo", url: "https://www.westsidetoastmasters.com/resources/communication_secrets/lib0049.html" }] }, orig: ["6", "11", "12"] },
+      checagem: { conf: 92, base: "Estrutura introdução–desenvolvimento–conclusão é padrão de oratória e redação; é a mesma do slide 12 do original e do Caderno de estudo, cap. 7.1 (introdução = abertura do cap. 2). Drucker só nas notas, como paráfrase.", fontes: [{ titulo: "Drucker, Management (1973), cap. Managerial Communications — resumo", url: "https://www.westsidetoastmasters.com/resources/communication_secrets/lib0049.html" }] }, orig: ["6", "11", "12"] },
 
     { id: "s05", bloco: "b3", tipo: "demo", modo: "carta", formato: "carta", titulo: "Eu faço: o roteiro da Lara",
       campos: [
@@ -85,12 +85,12 @@ window.AULA = {
 
     { id: "s06", bloco: "b3", tipo: "conteudo", titulo: "Palavras-chave e conectivos",
       texto: "Roteiro não é texto para ler. É uma lista curta de **palavras-chave**.",
-      itens: ["**Primeiro**, … (abre a ideia)", "**Além disso**, … (soma um argumento)", "**Por isso**, … (mostra a consequência)", "**Concluindo**, … (fecha)"],
+      itens: ["**Primeiro**, … (abre a ideia)", "**Além disso**, … (soma um argumento)", "**Por exemplo**, … (mostra um caso)", "**Por isso**, … (mostra a consequência)", "**Concluindo**, … (fecha)"],
       destaque: "Olhe a palavra, fale, volte a olhar para o público.",
       apoio: { emoji: "🔑", texto: "Escreva poucas palavras. Fale o resto." },
       glossario: [{ termo: "Conectivo", emoji: "🔗", explica: "Palavra que liga uma ideia à outra." }],
       prof: { fazer: "Fale o roteiro da Lara usando os 4 conectivos.", tempo_min: 3 },
-      checagem: { conf: 92, base: "Conectivos do slide 13 do original; uso padrão da língua portuguesa." }, orig: ["13"] },
+      checagem: { conf: 92, base: "Conectivos do slide 13 do original e do Caderno de estudo, cap. 7.3 (inclui \"por exemplo\"); uso padrão da língua portuguesa." }, orig: ["13"] },
 
     { id: "s07", bloco: "b3", tipo: "cards", modo: "classificar", titulo: "Em que parte entra?",
       grupos: ["Introdução", "Desenvolvimento", "Conclusão"],
@@ -129,13 +129,13 @@ window.AULA = {
       checagem: { conf: 95, base: "Atividade de apoio sem conteúdo novo." } },
 
     { id: "s11", bloco: "b4", tipo: "atividade", titulo: "Ensaio em dupla (5 min)", tempo_min: 5, entrega: "Roteiro no caderno; visto na próxima aula",
-      itens: ["Leia seu roteiro 1 vez em silêncio", "Fale para o colega olhando só as palavras-chave", "O colega confere: disse o objetivo? deu 2 argumentos? fechou com um pedido?", "Troquem"],
+      itens: ["Leia seu roteiro 1 vez: a ordem faz sentido?", "Fale em voz alta para o colega, olhando só as palavras-chave", "Use o cronômetro do celular: até 1 minuto", "O colega confere: disse o objetivo? mostrou fatos ou números? fechou com uma recomendação?", "O colega dá um feedback: clareza, ritmo, volume da voz", "Troquem"],
       apoio: { emoji: "👥", texto: "Fale para o colega. Depois troque." },
       prof: { fazer: "Cronometre 1 minuto por pessoa no painel.", adapta: "Quem não quer falar em público pode falar só para o colega.", tempo_min: 8 },
-      checagem: { conf: 95, base: "Atividade de sala sem dado factual." }, orig: ["17"] },
+      checagem: { conf: 95, base: "Passos de ensaio iguais aos do Caderno de estudo, cap. 7.4 (cronômetro e feedback)." }, orig: ["17"] },
 
     { id: "s12", bloco: "b5", tipo: "quadro", titulo: "Para o caderno",
-      linhas: ["ROTEIRO DE FALA = guia com palavras-chave", "1. Introdução: tema + objetivo", "2. Desenvolvimento: 2 argumentos ou exemplos", "3. Conclusão: retomar a ideia + próximo passo", "Conectivos: primeiro, além disso, por isso, concluindo"],
+      linhas: ["ROTEIRO DE FALA = guia com palavras-chave", "1. Introdução (ou abertura): tema + problema + objetivo", "2. Desenvolvimento: dados, exemplos ou argumentos", "3. Conclusão: mensagem principal + recomendação", "Conectivos: primeiro, além disso, por exemplo, por isso, concluindo", "Caderno de estudo: cap. 7, exercícios 7.1 a 7.3"],
       apoio: { emoji: "📓", texto: "Copie as 3 partes no caderno." },
       prof: { fazer: "Cada Próximo escreve uma linha. Use ✏️ para acrescentar algo da turma.", tempo_min: 4 },
       checagem: { conf: 95, base: "Resumo do próprio conteúdo da aula." }, orig: ["20"] },
@@ -165,6 +165,7 @@ window.AULA = {
           { id: "29-f2-1", tipo: "lacuna", frase: "___, vou mostrar o problema.", opcoes: ["Primeiro", "Concluindo", "Por isso"], correta: 0, explica: "\"Primeiro\" abre a ideia." },
           { id: "29-f2-2", tipo: "lacuna", frase: "___, o mural custa pouco.", opcoes: ["Além disso", "Concluindo", "Primeiro"], correta: 0, explica: "\"Além disso\" soma mais um argumento." },
           { id: "29-f2-3", tipo: "lacuna", frase: "___, peço um teste de um mês.", opcoes: ["Concluindo", "Além disso", "Primeiro"], correta: 0, explica: "\"Concluindo\" fecha a fala." },
+          { id: "29-f2-4", tipo: "lacuna", frase: "___, na escola vizinha o mural reduziu os avisos perdidos.", opcoes: ["Por exemplo", "Concluindo", "Primeiro"], correta: 0, explica: "\"Por exemplo\" avisa que vem um caso." },
         ] },
       { id: "f3", nome: "Monte o roteiro", emoji: "📝",
         exemplo: { modo: "carta", formato: "carta", campos: [

@@ -68,16 +68,17 @@ window.AULA = {
         { texto: "Link com nome: \"Ver catálogo\"", grupo: 0 },
         { texto: "Endereço comprido colado no meio do slide", grupo: 1, dica: "Ninguém lê um endereço comprido. Dê um nome ao link." },
         { texto: "Vídeo que ninguém testou antes", grupo: 1, dica: "Sem teste, o vídeo pode não abrir na hora." },
+        { texto: "Link escrito \"Clique aqui\"", grupo: 1, dica: "Ninguém sabe para onde vai. Escreva o destino: \"Ver relatório de vendas\"." },
       ],
       prof: { fazer: "Turma decide junto; R mostra na TV.", tempo_min: 4 },
       checagem: { conf: 92, base: "Boas práticas do próprio original (slides 9, 10, 14) e de tutoriais que recomendam efeitos discretos e consistentes.", fontes: [{ titulo: "Cursa: animações e transições com moderação", url: "https://cursa.app/pt/pagina/google-slides-animacoes-e-transicoes-com-objetivo-e-moderacao" }] }, orig: ["9", "10", "14"] },
 
     { id: "s05", bloco: "b2", tipo: "conteudo", titulo: "Antes de colocar um vídeo, 3 perguntas", revelar_itens: true,
       itens: ["Ele **ajuda a explicar**?", "**Cabe no tempo** da apresentação?", "Vai **abrir na hora** (internet, som, permissão)?"],
-      destaque: "Plano B: uma foto do produto, com a fonte.",
+      destaque: "Plano B: uma imagem do vídeo, uma captura de tela ou uma explicação falada.",
       apoio: { emoji: "❓", texto: "Ajuda? Cabe? Abre?" },
       prof: { falar: "Se uma resposta for \"não\", troque por imagem.", tempo_min: 2 },
-      checagem: { conf: 95, base: "As 3 perguntas são do slide 9 do original, reescritas." }, orig: ["9", "10"] },
+      checagem: { conf: 95, base: "As 3 perguntas são do slide 9 do original e do Caderno de estudo, cap. 8.2; plano B do cap. 8.4." }, orig: ["9", "10"] },
 
     { id: "s06", bloco: "b3", tipo: "tutorial", ferramenta: "Google Slides no computador", titulo: "Inserir um vídeo",
       passos: [
@@ -165,12 +166,12 @@ window.AULA = {
       checagem: { conf: 95, base: "Atividade de apoio." } },
 
     { id: "s13", bloco: "b4", tipo: "atividade", titulo: "Checklist antes de apresentar (5 min)", tempo_min: 5, entrega: "Plano no caderno hoje; slides prontos no Classroom",
-      itens: ["O vídeo abre e tem som?", "O link abre o lugar certo?", "A transição é a mesma em todos os slides?", "Tenho um plano B se a internet cair?"],
+      itens: ["O vídeo abre e o som dá para ouvir?", "O link abre o lugar certo? O público consegue abrir?", "O link diz para onde leva (e não \"clique aqui\")?", "A transição é a mesma em todos os slides?", "Tenho autorização para usar o vídeo?", "Tenho um plano B se a internet cair?"],
       apoio: { emoji: "✅", texto: "Marque o que já testou." },
-      checagem: { conf: 95, base: "Itens de verificação do original (slides 10, 14, 18)." }, orig: ["10", "18"] },
+      checagem: { conf: 95, base: "Itens de verificação do original (slides 10, 14, 18) e do Caderno de estudo, cap. 8.3 e 8.4." }, orig: ["10", "18"] },
 
     { id: "s14", bloco: "b5", tipo: "quadro", titulo: "Para o caderno",
-      linhas: ["Recurso multimídia: ajuda a explicar, não é enfeite", "Transição: entre slides | Animação: dentro do slide", "Vídeo: Inserir › Vídeo — curto, útil, testado, com plano B", "Transição: Slide › Transição — discreta e igual", "Link: Inserir › Link (Ctrl+K) — com nome claro"],
+      linhas: ["Recurso multimídia: ajuda a explicar, não é enfeite", "Transição: entre slides | Animação: dentro do slide", "Vídeo: Inserir › Vídeo — curto, útil, testado, com plano B", "Transição: Slide › Transição — discreta e igual", "Link: Inserir › Link (Ctrl+K) — com nome claro", "Plano B: imagem, captura de tela ou explicação falada", "Caderno de estudo: cap. 8, exercícios 8.1 a 8.3"],
       apoio: { emoji: "📓", texto: "Copie os 3 caminhos." },
       checagem: { conf: 92, base: "Resumo da aula; caminhos conferidos nos slides 6–8 (link com 88%)." }, orig: ["20"] },
   ],
@@ -199,6 +200,7 @@ window.AULA = {
             itens: [{ texto: "Vídeo curto mostrando o produto", grupo: 0 }, { texto: "Efeito diferente em cada slide", grupo: 1 }, { texto: "Link com nome claro", grupo: 0 }, { texto: "Vídeo sem testar", grupo: 1 }] },
           { id: "30-f2-2", tipo: "escolha", pergunta: "Qual vídeo combina com a apresentação de um tênis?", opcoes: ["30 segundos mostrando o tênis em uso", "Clipe musical de 4 minutos", "Vídeo sem relação com o tênis"], correta: 0, apoio_opcoes: 2, explica: "Curto e mostrando o produto." },
           { id: "30-f2-3", tipo: "escolha", pergunta: "A internet caiu e o vídeo não abre. O que fazer?", opcoes: ["Mostrar a foto de plano B e seguir", "Cancelar a apresentação", "Esperar a internet voltar sem falar nada"], correta: 0, explica: "O plano B existe para isso." },
+          { id: "30-f2-4", tipo: "escolha", pergunta: "Qual é o melhor texto para um link?", opcoes: ["Ver relatório de vendas de março", "Clique aqui", "Link"], correta: 0, apoio_opcoes: 2, explica: "O texto diz para onde o link leva." },
         ] },
       { id: "f3", nome: "Onde clicar", emoji: "🖱️",
         exemplo: { modo: "carta", formato: "carta", campos: [
