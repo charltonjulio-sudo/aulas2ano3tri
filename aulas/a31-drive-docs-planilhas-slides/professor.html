@@ -436,29 +436,19 @@ Viva.portaoProfessor(function () {
     const L = listaTurma().sort((a, b) => (a.c || 99) - (b.c || 99) || String(a.n || "").localeCompare(String(b.n || "")));
     return L.map((x) => [x.c || "", x.n || "(sem nome)", x.t || "", situacao(x).txt.replace(/^\S+ /, ""), (saidas[x.uid] || []).length, x.cod || "", x.ap || ""]);
   }
-  function corpoTurma() {
-    const L = listaTurma(), ordem = { fora: 0, sem: 1, nav: 2, ok: 3 };
-    L.sort((a, b) => ordem[situacao(a).k] - ordem[situacao(b).k] || (a.c || 99) - (b.c || 99));
-    const turmas = [...new Set(Object.values(turma).map((x) => x.t).filter(Boolean))].sort();
-    const c = { ok: 0, fora: 0, sem: 0, nav: 0 }; L.forEach((x) => c[situacao(x).k]++);
-    const semNome = L.filter((x) => !x.n).length;
-    let h = '<h2 style="margin:0">👥 Turma ao vivo — ' + V.esc(A.titulo || "") + "</h2>" +
-      '<div class="turma-res"><b>' + L.length + "</b> aparelhos · 🟢 " + c.ok + " na aula · 🟠 " + c.fora + " fora · ⚫ " + c.sem + " sem sinal" + (semNome ? " · ❔ " + semNome + " sem nome" : "") +
-      (turmas.length > 1 ? ' · <label>Turma <select id="tm-filtro"><option value="">todas</option>' + turmas.map((t) => "<option" + (t === filtroTurma ? " selected" : "") + ">" + V.esc(t) + "</option>").join("") + "</select></label>" : "") + "</div>" +
+  /* Janela da turma: a estrutura é montada uma vez ao abrir; depois só os dados mudam
+     (a rolagem, o filtro e a seleção ficam onde o professor deixou). Ordem fixa: nº da chamada. */
+  function montarTurma() {
+    $("#turma-corpo").innerHTML = '<h2 style="margin:0">👥 Turma ao vivo — ' + V.esc(A.titulo || "") + "</h2>" +
+      '<div class="turma-res"><span id="tm-res"></span><label id="tm-filtro-box" hidden>Turma <select id="tm-filtro"></select></label></div>' +
+      '<p id="tm-fora" style="margin:.2em 0;font-weight:700;color:#8a3c00"></p>' +
       '<p style="margin:.2em 0 .6em;font-size:.85em;color:#3d4152">🟠 <b>fora</b>: trocou de app ou de aba, ou bloqueou o celular. ⚫ <b>sem sinal</b>: celular sem internet ou navegador fechado. O código do aparelho aparece embaixo, na tela do aluno.</p>' +
-      '<div style="max-height:58vh;overflow:auto"><table class="turma"><tr><th>nº</th><th>nome</th><th>turma</th><th>aparelho</th><th>onde</th><th>situação</th><th>saídas</th></tr>' +
-      L.map((x) => {
-        const si = situacao(x), sd = saidas[x.uid] || [];
-        return '<tr class="' + si.k + '"><td>' + V.esc(x.c || "") + "</td><td>" + (x.n ? V.esc(x.n) : "<i>sem nome</i>") + "</td><td>" + V.esc(x.t || "") + '</td><td><span class="cod">' + V.esc(x.cod || "?") + "</span> " + V.esc(x.ap || "") + "</td><td>" +
-          (x.pg === "jogo" ? "🎮 jogo" + (x.jg ? " · " + V.esc(x.jg) : "") : "📖 slides" + (x.sl ? " · slide " + V.esc(x.sl) : "")) + "</td><td>" + si.txt + "</td><td>" +
-          (sd.length ? "<b>" + sd.length + "</b> · " + sd.slice(-3).map((s) => hora(s.em) + (s.volta ? "–" + hora(s.volta) : "")).join(", ") : "0") + "</td></tr>";
-      }).join("") + "</table></div>" +
-      (L.length ? "" : "<p>Nenhum aparelho ainda. Peça para os alunos abrirem o link ou o QR.</p>") +
-      (diag ? '<p style="font-weight:700;color:' + (diag.ok ? "#1b5e20" : diag.ok === false ? "#8e1b1b" : "#3d4152") + '">🩺 ' + V.esc(diag.msg) + "</p>" : "") +
-      '<p style="display:flex;gap:.5em;flex-wrap:wrap;margin-top:.8em"><button class="btn" type="button" id="tm-copiar">📋 Copiar chamada</button><button class="btn sec" type="button" id="tm-csv">⬇️ Baixar planilha (CSV)</button><button class="btn sec" type="button" id="tm-nova">' + (apagar ? "Clique de novo para apagar a lista" : "🧹 Nova chamada") + '</button><button class="btn sec" type="button" id="tm-teste">🩺 Testar chamada</button><button class="btn sec" type="button" id="tm-fechar">Fechar</button></p>' +
+      '<div id="tm-rola" style="max-height:58vh;overflow:auto"><table class="turma"><thead><tr><th>nº</th><th>nome</th><th>turma</th><th>aparelho</th><th>onde</th><th>situação</th><th>saídas</th></tr></thead><tbody id="tm-linhas"></tbody></table></div>' +
+      '<p id="tm-vazio" hidden>Nenhum aparelho ainda. Peça para os alunos abrirem o link ou o QR.</p>' +
+      '<p id="tm-diag" style="font-weight:700" hidden></p>' +
+      '<p style="display:flex;gap:.5em;flex-wrap:wrap;margin-top:.8em"><button class="btn" type="button" id="tm-copiar">📋 Copiar chamada</button><button class="btn sec" type="button" id="tm-csv">⬇️ Baixar planilha (CSV)</button><button class="btn sec" type="button" id="tm-nova">🧹 Nova chamada</button><button class="btn sec" type="button" id="tm-teste">🩺 Testar chamada</button><button class="btn sec" type="button" id="tm-fechar">Fechar</button></p>' +
       '<p style="font-size:.8em;color:#3d4152">Os nomes ficam só no seu Firebase (só a sua conta lê). Use <b>Nova chamada</b> no começo de cada turma: apaga a lista anterior desta aula.</p>';
-    $("#turma-corpo").innerHTML = h;
-    const f = $("#tm-filtro"); if (f) f.onchange = () => { filtroTurma = f.value; corpoTurma(); pintaTurma(); };
+    $("#tm-filtro").onchange = () => { filtroTurma = $("#tm-filtro").value; corpoTurma(); pintaTurma(); };
     const cab = ["nº", "nome", "turma", "situação", "saídas", "aparelho", "modelo"];
     $("#tm-copiar").onclick = () => { const t = [cab].concat(linhasChamada()).map((r) => r.join("\t")).join("\n"); navigator.clipboard.writeText(t).then(() => V.toast("Copiado. Cole na planilha.", "ok"), () => V.toast("Não deu para copiar.")); };
     $("#tm-csv").onclick = () => {
@@ -475,6 +465,43 @@ Viva.portaoProfessor(function () {
     };
     $("#tm-fechar").onclick = () => $("#d-turma").close();
     $("#tm-teste").onclick = diagnosticar;
+  }
+  function corpoTurma() {
+    if (!$("#tm-linhas")) montarTurma();
+    const L = listaTurma().sort((a, b) => (a.c || 99) - (b.c || 99) || String(a.n || "~").localeCompare(String(b.n || "~")) || String(a.cod).localeCompare(String(b.cod)));
+    const c = { ok: 0, fora: 0, sem: 0, nav: 0 }; L.forEach((x) => c[situacao(x).k]++);
+    const semNome = L.filter((x) => !x.n).length;
+    const res = "<b>" + L.length + "</b> aparelhos · 🟢 " + c.ok + " na aula · 🟠 " + c.fora + " fora · ⚫ " + c.sem + " sem sinal" + (semNome ? " · ❔ " + semNome + " sem nome" : "");
+    if ($("#tm-res").innerHTML !== res) $("#tm-res").innerHTML = res;
+    const fora = L.filter((x) => situacao(x).k === "fora").map((x) => (x.n ? x.n.split(" ")[0] + (x.c ? " (" + x.c + ")" : "") : x.cod));
+    $("#tm-fora").textContent = fora.length ? "🟠 Fora agora: " + fora.join(", ") : "";
+    // filtro: só recria as opções se a lista de turmas mudou e o professor não está mexendo nele
+    const turmas = [...new Set(Object.values(turma).map((x) => x.t).filter(Boolean))].sort(), sel = $("#tm-filtro");
+    $("#tm-filtro-box").hidden = turmas.length < 2;
+    if (sel.dataset.t !== turmas.join("|") && document.activeElement !== sel) {
+      sel.innerHTML = '<option value="">todas</option>' + turmas.map((t) => "<option" + (t === filtroTurma ? " selected" : "") + ">" + V.esc(t) + "</option>").join("");
+      sel.dataset.t = turmas.join("|");
+    }
+    // linhas: atualiza só a que mudou, sem recriar a tabela
+    const tb = $("#tm-linhas"), vistos = new Set();
+    L.forEach((x, idx) => {
+      const si = situacao(x), sd = saidas[x.uid] || [], id = "tm-r-" + x.uid;
+      const html = "<td>" + V.esc(x.c || "") + "</td><td>" + (x.n ? V.esc(x.n) : "<i>sem nome</i>") + "</td><td>" + V.esc(x.t || "") + '</td><td><span class="cod">' + V.esc(x.cod || "?") + "</span> " + V.esc(x.ap || "") + "</td><td>" +
+        (x.pg === "jogo" ? "🎮 jogo" + (x.jg ? " · " + V.esc(x.jg) : "") : "📖 slides" + (x.sl ? " · slide " + V.esc(x.sl) : "")) + "</td><td>" + si.txt + "</td><td>" +
+        (sd.length ? "<b>" + sd.length + "</b> · " + sd.slice(-3).map((s) => hora(s.em) + (s.volta ? "–" + hora(s.volta) : "")).join(", ") : "0") + "</td>";
+      let tr = document.getElementById(id);
+      if (!tr) { tr = document.createElement("tr"); tr.id = id; }
+      if (tr.className !== si.k) tr.className = si.k;
+      if (tr.dataset.h !== html) { tr.innerHTML = html; tr.dataset.h = html; }
+      if (tb.children[idx] !== tr) tb.insertBefore(tr, tb.children[idx] || null);
+      vistos.add(id);
+    });
+    [...tb.children].forEach((tr) => { if (!vistos.has(tr.id)) tr.remove(); });
+    $("#tm-vazio").hidden = L.length > 0;
+    const dg = $("#tm-diag");
+    dg.hidden = !diag;
+    if (diag) { dg.textContent = "🩺 " + diag.msg; dg.style.color = diag.ok ? "#1b5e20" : diag.ok === false ? "#8e1b1b" : "#3d4152"; }
+    $("#tm-nova").textContent = apagar ? "Clique de novo para apagar a lista" : "🧹 Nova chamada";
   }
   function ligarTurma() {
     if (!V.Sync.temRemoto() || !V.Sync.auth() || ouvinte) return pintaTurma();
