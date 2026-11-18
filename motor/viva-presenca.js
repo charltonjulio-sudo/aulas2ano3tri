@@ -137,7 +137,7 @@
       const fundo = document.createElement("div"); fundo.className = "chamada-fundo";
       fundo.innerHTML = '<form class="chamada-caixa" novalidate><h2 class="s-titulo">📋 Chamada</h2><p>Escreva seu nome para o professor saber que você está na aula.</p>' +
         '<label class="rot" for="ch-nome">Nome e sobrenome</label><input id="ch-nome" class="resp-texto" maxlength="60" autocomplete="name">' +
-        '<label class="rot" for="ch-num">Número da chamada</label><input id="ch-num" class="resp-texto" type="number" min="1" max="60" inputmode="numeric">' +
+        '<label class="rot" for="ch-num">Número da chamada</label><select id="ch-num" class="resp-texto">' + '<option value="">Escolha…</option>' + Array.from({ length: 50 }, (_, i) => '<option>' + (i + 1) + '</option>').join("") + '</select>' +
         (turmas.length ? '<label class="rot" for="ch-turma">Turma</label><select id="ch-turma" class="resp-texto"><option value="">Escolha…</option>' + turmas.map((t) => "<option>" + V.esc(t) + "</option>").join("") + "</select>" : "") +
         '<p class="ch-msg" aria-live="polite"></p><p style="display:flex;gap:.5em;flex-wrap:wrap"><button class="btn" type="submit">Entrar na aula ▶</button>' +
         (o.podePular ? '<button class="btn sec" type="button" data-pular>Estou estudando em casa</button>' : "") + "</p></form>";
@@ -150,7 +150,7 @@
       f.onsubmit = (e) => {
         e.preventDefault();
         const nome = q("#ch-nome").value, num = +q("#ch-num").value, tu = q("#ch-turma") ? q("#ch-turma").value : "";
-        const erro = this.validarNome(nome) || (!(num >= 1 && num <= 60) ? "Coloque seu número da chamada." : "") || (turmas.length && !tu ? "Escolha sua turma." : "");
+        const erro = this.validarNome(nome) || (!(num >= 1 && num <= 50) ? "Escolha seu número da chamada." : "") || (turmas.length && !tu ? "Escolha sua turma." : "");
         if (erro) { q(".ch-msg").textContent = erro; return; }
         this.definirAluno({ nome, numero: num, turma: tu }); fechar();
       };

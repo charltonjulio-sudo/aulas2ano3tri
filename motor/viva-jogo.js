@@ -26,7 +26,7 @@
       tela('<div class="slide ctx-aluno"><div class="s-hero" style="color:var(--texto)"><div class="hero-emoji">' + esc(J.emoji || "🎮") + '</div><h1 class="s-titulo">' + md(J.titulo) + '</h1></div>' +
         '<p>Em cada fase você <b>vê um exemplo</b> e depois <b>faz igual</b>. Pode errar: errar faz parte do treino.</p>' +
         '<label class="rot" for="j-nome">Nome e sobrenome</label><input id="j-nome" class="resp-texto" autocomplete="name">' +
-        '<label class="rot" for="j-num">Número da chamada</label><input id="j-num" class="resp-texto" type="number" min="1" max="60" inputmode="numeric">' +
+        '<label class="rot" for="j-num">Número da chamada</label><select id="j-num" class="resp-texto">' + '<option value="">Escolha…</option>' + Array.from({ length: 50 }, (_, i) => '<option>' + (i + 1) + '</option>').join("") + '</select>' +
         (turmas.length ? '<label class="rot" for="j-turma">Turma</label><select id="j-turma" class="resp-texto"><option value="">Escolha…</option>' + turmas.map((t) => "<option>" + esc(t) + "</option>").join("") + "</select>" : "") +
         '<p id="j-msg" style="color:var(--vermelho)" aria-live="polite"></p><p><button class="btn" type="button" id="j-ok">Começar ▶</button></p></div>');
       const id = V.Presenca && V.Presenca.identidade();
@@ -35,7 +35,7 @@
         const nome = V.$("#j-nome").value.trim().replace(/\s+/g, " "), num = +V.$("#j-num").value, tu = turmas.length ? V.$("#j-turma").value : "";
         const errNome = V.Presenca ? V.Presenca.validarNome(nome) : nome.split(" ").length < 2 ? "Escreva nome e sobrenome." : "";
         if (errNome) return (V.$("#j-msg").textContent = errNome);
-        if (!(num >= 1 && num <= 60)) return (V.$("#j-msg").textContent = "Coloque seu número da chamada.");
+        if (!(num >= 1 && num <= 50)) return (V.$("#j-msg").textContent = "Escolha seu número da chamada.");
         if (turmas.length && !tu) return (V.$("#j-msg").textContent = "Escolha sua turma.");
         st.aluno = { nome, numero: num, turma: tu }; salvar();
         if (V.Presenca) V.Presenca.definirAluno(st.aluno);
